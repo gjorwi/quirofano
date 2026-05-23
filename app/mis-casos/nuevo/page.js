@@ -8,17 +8,18 @@ import { useData } from '@/components/AppProvider';
 import PatientSelectorModal from '@/components/PatientSelectorModal';
 import DiagnosticoSelectorModal from '@/components/DiagnosticoSelectorModal';
 import ProcedimientoSelectorModal from '@/components/ProcedimientoSelectorModal';
-import { ArrowLeft, Send, User, FileSearch, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Send, User, FileSearch, FlaskConical, Plus, X, ChevronDown, Save } from 'lucide-react';
 
 export default function NuevoCasoEspecialistaPage() {
   const { user } = useAuth();
-  const { crearCaso, especialistas } = useData();
+  const { crearCaso, especialistas, crearEspecialista } = useData();
   const router = useRouter();
 
   const [form, setForm] = useState({
     tipo: 'electivo',
     paciente: '',
     equipoQuirurgico: [],
+    asistentesExternos: [],
     diagnostico: '',
     procedimiento: '',
     duracionEstimadaMin: '',
@@ -29,6 +30,10 @@ export default function NuevoCasoEspecialistaPage() {
   });
   const [errors, setErrors] = useState({});
   const [saved, setSaved] = useState(false);
+  const [formAsistente, setFormAsistente] = useState({ nombre: '', especialidad: '', codigoColegiado: '' });
+  const [mostrarFormAsistente, setMostrarFormAsistente] = useState(false);
+  const [errsAsistente, setErrsAsistente] = useState({});
+  const [guardandoAsistente, setGuardandoAsistente] = useState(false);
   const [mostrarModalPaciente, setMostrarModalPaciente] = useState(false);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
   const [mostrarModalDiagnostico, setMostrarModalDiagnostico] = useState(false);
@@ -38,12 +43,31 @@ export default function NuevoCasoEspecialistaPage() {
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
 
-  const toggleEquipo = id => setForm(f => ({
-    ...f,
-    equipoQuirurgico: f.equipoQuirurgico.includes(id)
-      ? f.equipoQuirurgico.filter(x => x !== id)
-      : [...f.equipoQuirurgico, id],
-  }));
+  const toggleEquipo = id => {
+    setForm(f => ({
+      ...f,
+      equipoQuirurgico: f.equipoQuirurgico.includes(id)
+        ? f.equipoQuirurgico.filter(x => x !== id)
+        : [...f.equipoQuirurgico, id],
+    }));
+    setErrors(e => ({ ...e, equipo: '' }));
+  };
+
+  const setA = (k, v) => { setFormAsistente(f => ({ ...f, [k]: v })); setErrsAsistente(e => ({ ...e, [k]: '' })); };
+  const guardarAsistente = async () => {
+    const e = {};
+    if (!formAsistente.nombre.trim()) e.nombre = 'Requerido';
+    if (!formAsistente.especialidad.trim()) e.especialidad = 'Requerida';
+    if (Object.keys(e).length) { setErrsAsistente(e); return; }
+    setGuardandoAsistente(true);
+    try {
+      const nuevo = await crearEspecialista({ nombre: formAsistente.nombre.trim(), especialidad: formAsistente.especialidad.trim(), codigoColegiado: formAsistente.codigoColegiado.trim() });
+      toggleEquipo(nuevo._id);
+      setFormAsistente({ nombre: '', especialidad: '', codigoColegiado: '' });
+      setMostrarFormAsistente(false);
+      setErrsAsistente({});
+    } finally { setGuardandoAsistente(false); }
+  };
 
   const handleSelectPaciente = (p) => {
     setPacienteSeleccionado(p);
@@ -69,6 +93,7 @@ export default function NuevoCasoEspecialistaPage() {
     if (!form.procedimiento) e.procedimiento = 'Requerido';
     if (!form.diagnostico) e.diagnostico = 'Requerido';
     if (form.tipo === 'emergencia' && !form.motivoEmergencia) e.motivoEmergencia = 'Requerido';
+    if (form.equipoQuirurgico.length === 0) e.equipo = 'Debe agregar al menos un asistente';
     return e;
   };
 
@@ -210,23 +235,69 @@ export default function NuevoCasoEspecialistaPage() {
               {errors.paciente && <p className="text-xs text-red-500 mt-1">{errors.paciente}</p>}
             </div>
 
-            {otrosEspecialistas.length > 0 && (
-              <div>
-                <label className="label">Asistentes / Equipo (opcional)</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-1">
-                  {otrosEspecialistas.map(e => (
-                    <label key={e._id} className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
-                      <input type="checkbox" checked={form.equipoQuirurgico.includes(e._id)}
-                        onChange={() => toggleEquipo(e._id)} className="rounded border-slate-300 text-blue-600" />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-700 truncate">{e.nombre}</p>
-                        <p className="text-xs text-slate-400 truncate">{e.especialidad}</p>
+            <div>
+                <label className="label">Asistentes / Equipo *</label>
+                {errors.equipo && <p className="text-xs text-red-500 mb-1">{errors.equipo}</p>}
+
+                {/* Especialistas registrados */}
+                {otrosEspecialistas.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-1">
+                    {otrosEspecialistas.map(e => (
+                      <label key={e._id} className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors
+                        ${form.equipoQuirurgico.includes(e._id) ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                        <input type="checkbox" checked={form.equipoQuirurgico.includes(e._id)}
+                          onChange={() => toggleEquipo(e._id)} className="rounded border-slate-300 text-blue-600" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-slate-700 truncate">{e.nombre}</p>
+                          <p className="text-xs text-slate-400 truncate">{e.especialidad}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {/* Registrar nuevo asistente en catálogo */}
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <button type="button" onClick={() => setMostrarFormAsistente(v => !v)}
+                    className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                    <Plus size={15} />
+                    {mostrarFormAsistente ? 'Cancelar registro' : '¿No está en la lista? Registrar nuevo asistente'}
+                    <ChevronDown size={14} className={`transition-transform ${mostrarFormAsistente ? 'rotate-180' : ''}`} />
+                  </button>
+                  {mostrarFormAsistente && (
+                    <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-3">
+                      <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Nuevo Asistente</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="label text-xs">Nombre *</label>
+                          <input className={`input-field text-sm ${errsAsistente.nombre ? 'border-red-400' : ''}`}
+                            value={formAsistente.nombre} onChange={e => setA('nombre', e.target.value)}
+                            placeholder="Nombre completo" />
+                          {errsAsistente.nombre && <p className="text-xs text-red-500 mt-0.5">{errsAsistente.nombre}</p>}
+                        </div>
+                        <div>
+                          <label className="label text-xs">Especialidad *</label>
+                          <input className={`input-field text-sm ${errsAsistente.especialidad ? 'border-red-400' : ''}`}
+                            value={formAsistente.especialidad} onChange={e => setA('especialidad', e.target.value)}
+                            placeholder="Ej. Anestesiología" />
+                          {errsAsistente.especialidad && <p className="text-xs text-red-500 mt-0.5">{errsAsistente.especialidad}</p>}
+                        </div>
+                        <div>
+                          <label className="label text-xs">Código Colegiado</label>
+                          <input className="input-field text-sm" value={formAsistente.codigoColegiado}
+                            onChange={e => setA('codigoColegiado', e.target.value)} placeholder="Opcional" />
+                        </div>
                       </div>
-                    </label>
-                  ))}
+                      <div className="flex justify-end">
+                        <button type="button" onClick={guardarAsistente} disabled={guardandoAsistente}
+                          className="btn-primary text-sm px-4 py-2 flex items-center gap-2">
+                          <Save size={14} /> {guardandoAsistente ? 'Registrando…' : 'Registrar y agregar al equipo'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
           </div>
 
           {/* Procedimiento */}

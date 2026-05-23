@@ -61,6 +61,9 @@ function PlanCard({ plan, casos, resolveCaso, getQuirofanoById, qColorLight }) {
           <MapPin size={10} />
           <span>{q?.numero} – {q?.ubicacion}</span>
         </div>
+        <div className="mt-2">
+          <EstadoBadge estado={caso.estado} />
+        </div>
       </div>
     </Link>
   );
@@ -68,8 +71,9 @@ function PlanCard({ plan, casos, resolveCaso, getQuirofanoById, qColorLight }) {
 
 export default function PlanesPage() {
   const { casos, planes, quirofanos, resolveCaso, getQuirofanoById } = useData();
-  const hoy = new Date().toISOString().split('T')[0];
-  const [fechaActual, setFechaActual] = useState(() => new Date().toISOString().split('T')[0]);
+  const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  const hoy = localToday();
+  const [fechaActual, setFechaActual] = useState(localToday);
 
   const qColorSolidMap = Object.fromEntries(quirofanos.map((q, i) => [q._id, Q_COLORS_SOLID[i % Q_COLORS_SOLID.length]]));
   const qColorLightMap = Object.fromEntries(quirofanos.map((q, i) => [q._id, Q_COLORS_LIGHT[i % Q_COLORS_LIGHT.length]]));

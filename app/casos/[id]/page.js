@@ -1,5 +1,6 @@
 'use client';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { EstadoBadge, PrioridadBadge, TipoBadge } from '@/components/StatusBadge';
@@ -7,14 +8,20 @@ import { useData } from '@/components/AppProvider';
 import { estadoConfig } from '@/lib/mockData';
 import {
   ArrowLeft, User, Stethoscope, FileText, Calendar,
-  CheckCircle, XCircle, PlayCircle, StopCircle, Ban, ClipboardList, ShieldCheck
+  CheckCircle, XCircle, PlayCircle, StopCircle, Ban, ClipboardList, ShieldCheck,
+  Pencil, Plus, X, Save, Timer
 } from 'lucide-react';
 
 const FLUJO = ['pendiente', 'aprobada', 'programada', 'en_admision', 'en_curso', 'finalizado'];
 
 export default function CasoDetallePage() {
   const { id } = useParams();
-  const { casos, admisiones, insumos, aprobarCaso, rechazarCaso, actualizarEstadoCaso, cancelarCaso, resolveCaso, getQuirofanoById } = useData();
+  const { casos, admisiones, especialistas, actualizarCaso, aprobarCaso, rechazarCaso, actualizarEstadoCaso, cancelarCaso, resolveCaso, getQuirofanoById } = useData();
+  const [editandoEquipo, setEditandoEquipo] = useState(false);
+  const [equipoEdit,    setEquipoEdit]    = useState([]);
+  const [externosEdit,  setExternosEdit]  = useState([]);
+  const [inputExterno,  setInputExterno]  = useState('');
+  const [savingEquipo,  setSavingEquipo]  = useState(false);
 
   const caso = casos.find(c => c._id === id);
 
@@ -28,7 +35,7 @@ export default function CasoDetallePage() {
   }
 
   const r = resolveCaso(caso);
-  const admision = admisiones.find(a => a.caso === id);
+  const admision = admisiones.find(a => String(a.caso) === id);
   const quirofano = r.planObj ? getQuirofanoById(r.planObj.quirofano) : null;
 
   const transicionesDisponibles = () => {
@@ -55,14 +62,17 @@ export default function CasoDetallePage() {
         title={`Caso #${id.toUpperCase()}`}
         subtitle={r.pacienteObj?.nombre}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {transicionesDisponibles().map(({ accion, label, icon: Icon, cls }) => (
-              <button key={label} className={cls} onClick={accion}>
-                <Icon size={15} /> {label}
+              <button key={label} className={`${cls} text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2`} onClick={accion}>
+                <Icon size={14} />
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">{label.split(' ')[0]}</span>
               </button>
             ))}
-            <Link href="/casos" className="btn-secondary">
-              <ArrowLeft size={15} /> Volver
+            <Link href="/casos" className="btn-secondary text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2">
+              <ArrowLeft size={14} />
+              <span className="hidden sm:inline">Volver</span>
             </Link>
           </div>
         }
@@ -136,24 +146,100 @@ export default function CasoDetallePage() {
 
           {/* Equipo */}
           <div className="card p-5 space-y-3">
-            <h2 className="section-title flex items-center gap-2">
-              <Stethoscope size={16} className="text-blue-500" /> Equipo Quirúrgico
-            </h2>
-            <div className="space-y-2">
-              <InfoRow label="Especialista Principal" value={r.especialistaObj?.nombre} />
-              <InfoRow label="Especialidad" value={r.especialistaObj?.especialidad} />
-              <InfoRow label="Código Colegiado" value={r.especialistaObj?.codigoColegiado} />
-              {r.equipoObjs.length > 0 && (
+            <div className="flex items-center justify-between">
+              <h2 className="section-title flex items-center gap-2">
+                <Stethoscope size={16} className="text-blue-500" /> Equipo Quirúrgico
+              </h2>
+              {!['finalizado','cancelado','rechazada'].includes(caso.estado) && (
+                editandoEquipo ? (
+                  <button onClick={() => setEditandoEquipo(false)}
+                    className="text-xs text-slate-500 hover:text-slate-700">
+                    <X size={14} />
+                  </button>
+                ) : (
+                  <button onClick={() => {
+                    setEquipoEdit([...(caso.equipoQuirurgico || [])]);
+                    setExternosEdit([...(caso.asistentesExternos || [])]);
+                    setInputExterno('');
+                    setEditandoEquipo(true);
+                  }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="Editar equipo">
+                    <Pencil size={14} />
+                  </button>
+                )
+              )}
+            </div>
+
+            {!editandoEquipo ? (
+              <div className="space-y-2">
+                <InfoRow label="Especialista Principal" value={r.especialistaObj?.nombre} />
+                <InfoRow label="Especialidad" value={r.especialistaObj?.especialidad} />
+                <InfoRow label="Código Colegiado" value={r.especialistaObj?.codigoColegiado} />
+                {(r.equipoObjs.length > 0 || caso.asistentesExternos?.length > 0) && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Asistentes</p>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {r.equipoObjs.map(e => (
+                        <span key={e._id} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md">{e.nombre}</span>
+                      ))}
+                      {(caso.asistentesExternos || []).map(n => (
+                        <span key={n} className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md">{n}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500">Especialista principal: <strong>{r.especialistaObj?.nombre}</strong></p>
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Asistentes</p>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {r.equipoObjs.map(e => (
-                      <span key={e._id} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md">{e.nombre}</span>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Asistentes registrados</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {especialistas.filter(e => e._id !== caso.especialistaPrincipal).map(e => (
+                      <label key={e._id} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-xs transition-colors
+                        ${equipoEdit.includes(e._id) ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                        <input type="checkbox" className="rounded border-slate-300 text-blue-600"
+                          checked={equipoEdit.includes(e._id)}
+                          onChange={() => setEquipoEdit(prev =>
+                            prev.includes(e._id) ? prev.filter(x => x !== e._id) : [...prev, e._id]
+                          )} />
+                        <span className="truncate">{e.nombre}</span>
+                      </label>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Asistentes externos</p>
+                  <div className="flex gap-2">
+                    <input className="input-field flex-1 text-xs py-1.5" placeholder="Nombre del asistente…"
+                      value={inputExterno} onChange={e => setInputExterno(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (inputExterno.trim()) { setExternosEdit(p => [...p, inputExterno.trim()]); setInputExterno(''); } } }} />
+                    <button type="button" onClick={() => { if (inputExterno.trim()) { setExternosEdit(p => [...p, inputExterno.trim()]); setInputExterno(''); } }}
+                      className="btn-secondary px-2.5"><Plus size={14} /></button>
+                  </div>
+                  {externosEdit.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {externosEdit.map(n => (
+                        <span key={n} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-700">
+                          {n}
+                          <button onClick={() => setExternosEdit(p => p.filter(x => x !== n))}><X size={10} /></button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end gap-2 pt-1">
+                  <button onClick={() => setEditandoEquipo(false)} className="btn-secondary text-xs py-1.5">Cancelar</button>
+                  <button disabled={savingEquipo} onClick={async () => {
+                    setSavingEquipo(true);
+                    await actualizarCaso(id, { equipoQuirurgico: equipoEdit, asistentesExternos: externosEdit });
+                    setSavingEquipo(false);
+                    setEditandoEquipo(false);
+                  }} className="btn-primary text-xs py-1.5">
+                    <Save size={13} /> {savingEquipo ? 'Guardando…' : 'Guardar'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Procedimiento */}
@@ -213,6 +299,69 @@ export default function CasoDetallePage() {
                   <p className="text-sm font-medium text-slate-800">{caso.rechazadoPor}</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Tiempos quirúrgicos */}
+        {(r.planObj || caso.horaRealInicio || caso.horaRealFin) && (
+          <div className="card p-5">
+            <h2 className="section-title flex items-center gap-2 mb-4">
+              <Timer size={16} className="text-blue-500" /> Tiempos Quirúrgicos
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Estimado */}
+              {r.planObj && (
+                <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Estimado (programado)</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Inicio</span>
+                    <span className="font-semibold text-slate-800">{r.planObj.horaInicio || '—'}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Fin</span>
+                    <span className="font-semibold text-slate-800">{r.planObj.horaFinEstimada || '—'}</span>
+                  </div>
+                  {caso.duracionEstimadaMin && (
+                    <div className="flex justify-between text-sm border-t border-slate-200 pt-2 mt-2">
+                      <span className="text-slate-500">Duración</span>
+                      <span className="font-bold text-slate-700">{caso.duracionEstimadaMin} min</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Real */}
+              {(caso.horaRealInicio || caso.horaRealFin) && (() => {
+                const ini = caso.horaRealInicio ? new Date(caso.horaRealInicio) : null;
+                const fin = caso.horaRealFin   ? new Date(caso.horaRealFin)   : null;
+                const durMin = ini && fin ? Math.round((fin - ini) / 60000) : null;
+                const diff = durMin && caso.duracionEstimadaMin ? durMin - caso.duracionEstimadaMin : null;
+                return (
+                  <div className="bg-blue-50 rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">Real (ejecutado)</p>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Inicio</span>
+                      <span className="font-semibold text-slate-800">{ini ? ini.toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Fin</span>
+                      <span className="font-semibold text-slate-800">{fin ? fin.toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' }) : <span className="italic text-slate-400">En curso…</span>}</span>
+                    </div>
+                    {durMin !== null && (
+                      <div className="flex justify-between text-sm border-t border-blue-200 pt-2 mt-2">
+                        <span className="text-slate-500">Duración</span>
+                        <span className="font-bold text-slate-700">{durMin} min
+                          {diff !== null && (
+                            <span className={`ml-2 text-xs font-medium ${diff > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                              ({diff > 0 ? `+${diff}` : diff} min)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

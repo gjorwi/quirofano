@@ -1,7 +1,9 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useData } from '@/components/AppProvider';
-import { Calendar, X, Save, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Calendar, X, Save, ChevronLeft, ChevronRight, LayoutGrid, ClipboardList, Search } from 'lucide-react';
+import CasoSelectorModal from '@/components/CasoSelectorModal';
+import { TipoBadge, PrioridadBadge } from '@/components/StatusBadge';
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr + 'T12:00:00');
@@ -34,6 +36,7 @@ export default function ProgramarPlanModal({ casoPreseleccionado, onClose }) {
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState({});
   const [calSemana, setCalSemana] = useState(null);
+  const [mostrarSelectorCaso, setMostrarSelectorCaso] = useState(false);
 
   const set = (k, v) => {
     const next = { ...form, [k]: v };
@@ -117,21 +120,38 @@ export default function ProgramarPlanModal({ casoPreseleccionado, onClose }) {
             {/* Caso */}
             <div>
               <label className="label">Caso Quirúrgico *</label>
-              <select className={`select-field ${errors.caso ? 'border-red-400' : ''}`}
-                value={form.caso} onChange={e => set('caso', e.target.value)}
-                disabled={!!casoPreseleccionado}>
-                <option value="">— Seleccione caso aprobado —</option>
-                {casosAprobados.map(c => {
-                  const r = resolveCaso(c);
-                  return <option key={c._id} value={c._id}>{r.pacienteObj?.nombre} – {r.procedimientoObj?.nombre}</option>;
-                })}
-              </select>
-              {errors.caso && <p className="text-xs text-red-500 mt-1">{errors.caso}</p>}
-              {casoRes && (
-                <p className="text-xs text-slate-500 mt-1">
-                  <strong>{casoSel.duracionEstimadaMin} min</strong> · {casoRes.especialistaObj?.nombre}
-                </p>
+              {casoSel ? (
+                <div className={`p-3 rounded-lg border-2 ${errors.caso ? 'border-red-300' : 'border-blue-300 bg-blue-50'} flex items-start justify-between gap-2`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap gap-1.5 items-center mb-0.5">
+                      <p className="text-sm font-semibold text-blue-900 truncate">{casoRes?.pacienteObj?.nombre}</p>
+                      {casoSel && <TipoBadge tipo={casoSel.tipo} />}
+                    </div>
+                    <p className="text-xs text-blue-700 truncate">{casoRes?.procedimientoObj?.nombre}</p>
+                    <p className="text-xs text-blue-600 mt-0.5">{casoSel?.duracionEstimadaMin} min · {casoRes?.especialistaObj?.nombre}</p>
+                  </div>
+                  {!casoPreseleccionado && (
+                    <button type="button" onClick={() => setMostrarSelectorCaso(true)}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium flex-shrink-0">Cambiar</button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => !casoPreseleccionado && setMostrarSelectorCaso(true)}
+                  className={`w-full p-3 rounded-lg border-2 border-dashed text-left transition-all
+                    ${errors.caso ? 'border-red-400 bg-red-50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <ClipboardList size={18} className={errors.caso ? 'text-red-500' : 'text-slate-400'} />
+                    <div>
+                      <p className={`text-sm font-medium ${errors.caso ? 'text-red-700' : 'text-slate-600'}`}>Seleccionar caso aprobado</p>
+                      <p className="text-xs text-slate-400">Click para buscar y filtrar</p>
+                    </div>
+                  </div>
+                </button>
               )}
+              {errors.caso && <p className="text-xs text-red-500 mt-1">{errors.caso}</p>}
             </div>
 
             {/* Fecha */}
@@ -299,6 +319,13 @@ export default function ProgramarPlanModal({ casoPreseleccionado, onClose }) {
           </button>
         </div>
       </div>
+
+      {mostrarSelectorCaso && (
+        <CasoSelectorModal
+          onSelect={c => { set('caso', c._id); setMostrarSelectorCaso(false); }}
+          onClose={() => setMostrarSelectorCaso(false)}
+        />
+      )}
     </div>
   );
 }

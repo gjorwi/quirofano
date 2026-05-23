@@ -1,39 +1,40 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useData } from '@/components/AppProvider';
-import { X, Search, FileSearch, Check, Plus, Save, ChevronDown } from 'lucide-react';
+import { X, Search, Stethoscope, Check, Plus, Save, ChevronDown } from 'lucide-react';
 
-export default function DiagnosticoSelectorModal({ onSelect, onClose }) {
-  const { diagnosticos, crearDiagnostico } = useData();
-  const [busqueda, setBusqueda]         = useState('');
-  const [mostrarForm, setMostrarForm]   = useState(false);
-  const [formNuevo, setFormNuevo]       = useState({ codigo: '', nombre: '', descripcion: '' });
-  const [errsNuevo, setErrsNuevo]       = useState({});
-  const [guardando, setGuardando]       = useState(false);
+export default function EspecialistaSelectorModal({ onSelect, onClose }) {
+  const { especialistas, crearEspecialista } = useData();
+  const [busqueda, setBusqueda]       = useState('');
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [formNuevo, setFormNuevo]     = useState({ nombre: '', especialidad: '', codigoColegiado: '' });
+  const [errsNuevo, setErrsNuevo]     = useState({});
+  const [guardando, setGuardando]     = useState(false);
 
   const setN = (k, v) => { setFormNuevo(f => ({ ...f, [k]: v })); setErrsNuevo(e => ({ ...e, [k]: '' })); };
 
-  const diagnosticosFiltrados = useMemo(() => {
+  const filtrados = useMemo(() => {
     const txt = busqueda.toLowerCase();
-    return diagnosticos.filter(d =>
-      (d.codigo || '').toLowerCase().includes(txt) ||
-      d.nombre.toLowerCase().includes(txt) ||
-      (d.descripcion && d.descripcion.toLowerCase().includes(txt))
+    return especialistas.filter(e =>
+      e.nombre.toLowerCase().includes(txt) ||
+      (e.especialidad && e.especialidad.toLowerCase().includes(txt)) ||
+      (e.codigoColegiado && e.codigoColegiado.toLowerCase().includes(txt))
     );
-  }, [diagnosticos, busqueda]);
+  }, [especialistas, busqueda]);
 
-  const handleSelect = (d) => { onSelect(d); onClose(); };
+  const handleSelect = e => { onSelect(e); onClose(); };
 
   const handleGuardar = async () => {
     const e = {};
     if (!formNuevo.nombre.trim()) e.nombre = 'Requerido';
+    if (!formNuevo.especialidad.trim()) e.especialidad = 'Requerida';
     if (Object.keys(e).length) { setErrsNuevo(e); return; }
     setGuardando(true);
     try {
-      const nuevo = await crearDiagnostico({
-        codigo:      formNuevo.codigo.trim(),
-        nombre:      formNuevo.nombre.trim(),
-        descripcion: formNuevo.descripcion.trim(),
+      const nuevo = await crearEspecialista({
+        nombre:          formNuevo.nombre.trim(),
+        especialidad:    formNuevo.especialidad.trim(),
+        codigoColegiado: formNuevo.codigoColegiado.trim(),
       });
       onSelect(nuevo);
       onClose();
@@ -49,8 +50,8 @@ export default function DiagnosticoSelectorModal({ onSelect, onClose }) {
         {/* Header */}
         <div className="border-b border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between rounded-t-2xl flex-shrink-0">
           <div className="flex items-center gap-2">
-            <FileSearch size={18} className="text-blue-600" />
-            <h2 className="text-base sm:text-lg font-bold text-slate-900">Seleccionar Diagnóstico</h2>
+            <Stethoscope size={18} className="text-blue-600" />
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">Seleccionar Especialista Principal</h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
             <X size={18} />
@@ -63,32 +64,28 @@ export default function DiagnosticoSelectorModal({ onSelect, onClose }) {
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input type="text" className="input-field pl-10"
-              placeholder="Buscar por código CIE-10, nombre o descripción..."
+              placeholder="Buscar por nombre, especialidad o código colegiado..."
               value={busqueda} onChange={e => setBusqueda(e.target.value)} autoFocus />
           </div>
 
           {/* Lista */}
           <div className="space-y-2 max-h-72 overflow-y-auto">
-            {diagnosticosFiltrados.length === 0 && (
+            {filtrados.length === 0 && (
               <div className="text-center py-6">
-                <FileSearch size={28} className="text-slate-200 mx-auto mb-2" />
-                <p className="text-slate-400 text-sm">No se encontraron diagnósticos</p>
+                <Stethoscope size={28} className="text-slate-200 mx-auto mb-2" />
+                <p className="text-slate-400 text-sm">No se encontraron especialistas</p>
               </div>
             )}
-            {diagnosticosFiltrados.map(d => (
-              <button key={d._id} onClick={() => handleSelect(d)}
+            {filtrados.map(e => (
+              <button key={e._id} onClick={() => handleSelect(e)}
                 className="w-full text-left p-3 sm:p-4 rounded-xl border-2 border-slate-100 hover:border-blue-300 hover:bg-blue-50 transition-all group">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {d.codigo && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-slate-100 text-slate-700 group-hover:bg-blue-200 group-hover:text-blue-800">
-                          {d.codigo}
-                        </span>
-                      )}
-                      <p className="font-semibold text-slate-800 group-hover:text-blue-700 text-sm truncate">{d.nombre}</p>
+                    <p className="font-semibold text-slate-800 group-hover:text-blue-700 text-sm">{e.nombre}</p>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-slate-500">
+                      {e.especialidad && <span>{e.especialidad}</span>}
+                      {e.codigoColegiado && <span className="font-mono">Cód: {e.codigoColegiado}</span>}
                     </div>
-                    {d.descripcion && <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{d.descripcion}</p>}
                   </div>
                   <div className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Check size={14} className="text-blue-600" />
@@ -103,31 +100,32 @@ export default function DiagnosticoSelectorModal({ onSelect, onClose }) {
             <button type="button" onClick={() => setMostrarForm(v => !v)}
               className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
               <Plus size={15} />
-              {mostrarForm ? 'Cancelar registro' : '¿No está disponible? Registrar nuevo diagnóstico'}
+              {mostrarForm ? 'Cancelar registro' : '¿No está disponible? Registrar nuevo especialista'}
               <ChevronDown size={14} className={`transition-transform ${mostrarForm ? 'rotate-180' : ''}`} />
             </button>
 
             {mostrarForm && (
               <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-3">
-                <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Nuevo Diagnóstico</p>
+                <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Nuevo Especialista</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="label text-xs">Código CIE-10</label>
-                    <input className="input-field text-sm" value={formNuevo.codigo}
-                      onChange={e => setN('codigo', e.target.value)} placeholder="Ej. K35.2" />
-                  </div>
-                  <div className="sm:col-span-2">
                     <label className="label text-xs">Nombre *</label>
                     <input className={`input-field text-sm ${errsNuevo.nombre ? 'border-red-400' : ''}`}
                       value={formNuevo.nombre} onChange={e => setN('nombre', e.target.value)}
-                      placeholder="Nombre del diagnóstico" />
+                      placeholder="Nombre completo" />
                     {errsNuevo.nombre && <p className="text-xs text-red-500 mt-0.5">{errsNuevo.nombre}</p>}
                   </div>
-                  <div className="sm:col-span-3">
-                    <label className="label text-xs">Descripción</label>
-                    <textarea className="input-field text-sm" rows={2} value={formNuevo.descripcion}
-                      onChange={e => setN('descripcion', e.target.value)}
-                      placeholder="Descripción clínica (opcional)" />
+                  <div>
+                    <label className="label text-xs">Especialidad *</label>
+                    <input className={`input-field text-sm ${errsNuevo.especialidad ? 'border-red-400' : ''}`}
+                      value={formNuevo.especialidad} onChange={e => setN('especialidad', e.target.value)}
+                      placeholder="Ej. Cirugía General" />
+                    {errsNuevo.especialidad && <p className="text-xs text-red-500 mt-0.5">{errsNuevo.especialidad}</p>}
+                  </div>
+                  <div>
+                    <label className="label text-xs">Código Colegiado</label>
+                    <input className="input-field text-sm" value={formNuevo.codigoColegiado}
+                      onChange={e => setN('codigoColegiado', e.target.value)} placeholder="Opcional" />
                   </div>
                 </div>
                 <div className="flex justify-end">

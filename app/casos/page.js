@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 import Header from '@/components/Header';
 import { EstadoBadge, PrioridadBadge, TipoBadge } from '@/components/StatusBadge';
 import { useData } from '@/components/AppProvider';
-import { Plus, Search, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Eye } from 'lucide-react';
 
 const ESTADOS = ['', 'pendiente', 'aprobada', 'rechazada', 'programada', 'en_admision', 'en_curso', 'finalizado', 'cancelado'];
 const TIPOS = ['', 'electivo', 'emergencia'];
@@ -14,7 +14,7 @@ const PRIORIDADES = ['', 'alta', 'media', 'baja'];
 
 function CasosContent() {
   const searchParams = useSearchParams();
-  const { casos, aprobarCaso, rechazarCaso, resolveCaso } = useData();
+  const { casos, resolveCaso } = useData();
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState(searchParams.get('estado') || '');
   const [filtroTipo, setFiltroTipo] = useState(searchParams.get('tipo') || '');
@@ -36,7 +36,7 @@ function CasosContent() {
           (!filtroPrioridad || c.prioridad === filtroPrioridad);
       })
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [busqueda, filtroEstado, filtroTipo, filtroPrioridad]);
+  }, [casos, busqueda, filtroEstado, filtroTipo, filtroPrioridad, resolveCaso]);
 
   return (
     <div className="page-enter">
@@ -147,24 +147,6 @@ function CasosContent() {
                           >
                             <Eye size={15} />
                           </Link>
-                          {c.estado === 'pendiente' && (
-                            <>
-                              <button
-                                onClick={e => { e.preventDefault(); aprobarCaso(c._id); }}
-                                className="p-1.5 rounded-lg hover:bg-green-100 text-green-600 transition-colors"
-                                title="Aprobar"
-                              >
-                                <CheckCircle size={15} />
-                              </button>
-                              <button
-                                onClick={e => { e.preventDefault(); rechazarCaso(c._id); }}
-                                className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 transition-colors"
-                                title="Rechazar"
-                              >
-                                <XCircle size={15} />
-                              </button>
-                            </>
-                          )}
                         </div>
                       </td>
                     </tr>

@@ -205,10 +205,35 @@ export default function ProyeccionQuirurgicaPage() {
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Paciente</p>
-                          <p className="text-sm font-medium text-slate-900">{caso.resuelto.pacienteObj?.nombre}</p>
+                        {/* Paciente */}
+                        <div className="sm:col-span-2 bg-slate-50 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">Paciente</p>
+                            <p className="text-sm font-semibold text-slate-900">{caso.resuelto.pacienteObj?.nombre}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">Identificación</p>
+                            <p className="text-sm text-slate-700">{caso.resuelto.pacienteObj?.identificacion || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">Sexo / F. Nac.</p>
+                            <p className="text-sm text-slate-700 capitalize">
+                              {caso.resuelto.pacienteObj?.sexo || '—'}
+                              {caso.resuelto.pacienteObj?.fechaNacimiento ? ` · ${new Date(caso.resuelto.pacienteObj.fechaNacimiento + 'T12:00:00').toLocaleDateString('es-HN')}` : ''}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">Contacto</p>
+                            <p className="text-sm text-slate-700">{caso.resuelto.pacienteObj?.contacto || '—'}</p>
+                          </div>
+                          {caso.resuelto.pacienteObj?.alergias && (
+                            <div className="sm:col-span-4">
+                              <p className="text-[10px] font-semibold text-red-500 uppercase mb-0.5">⚠ Alergias</p>
+                              <p className="text-sm text-red-700 font-medium">{caso.resuelto.pacienteObj.alergias}</p>
+                            </div>
+                          )}
                         </div>
+                        {/* Procedimiento */}
                         <div>
                           <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Procedimiento</p>
                           <p className="text-sm text-slate-700 line-clamp-1">{caso.resuelto.procedimientoObj?.nombre}</p>

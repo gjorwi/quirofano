@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Stethoscope, CalendarDays, ClipboardList,
-  Settings, ChevronRight, Cross, LogOut, User, ShieldCheck, UserCog, Menu, X, Users
+  Settings, ChevronRight, Cross, LogOut, User, ShieldCheck, UserCog, Menu, X, Users, BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/components/AppProvider';
 import { ROL_LABELS, ROL_COLORS } from '@/lib/auth';
@@ -16,6 +16,7 @@ const NAV_BY_ROLE = {
     { href: '/casos',         label: 'Casos Quirúrgicos',   icon: Stethoscope },
     { href: '/planes',        label: 'Plan Quirúrgico',     icon: CalendarDays },
     { href: '/admision',      label: 'Admisión',            icon: ClipboardList },
+    { href: '/estadisticas',  label: 'Estadísticas',        icon: BarChart3 },
     { href: '/configuracion', label: 'Configuración',       icon: Settings },
   ],
   especialista: [
@@ -75,7 +76,7 @@ export default function Sidebar() {
             <Cross className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">QuirófanoApp</p>
+            <p className="text-white font-bold text-sm leading-tight">SICAQ</p>
             <p className="text-slate-400 text-xs">Gestión Quirúrgica</p>
           </div>
         </div>
@@ -103,7 +104,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto flex flex-col gap-0.5">
         <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-3 mb-2">Menú</p>
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/');
@@ -124,18 +125,19 @@ export default function Sidebar() {
             </Link>
           );
         })}
-      </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-3 border-t border-slate-700/60">
-        <button
-          onClick={logout}
-          className="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-colors"
-        >
-          <LogOut size={18} />
-          Cerrar Sesión
-        </button>
-      </div>
+        {/* Logout — inside scrollable nav so always reachable on mobile */}
+        <div className="mt-3 pt-3 border-t border-slate-700/50">
+          <button
+            onClick={() => { setMobileOpen(false); logout(); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+              text-red-400 hover:bg-red-900/40 hover:text-red-300 transition-colors"
+          >
+            <LogOut size={18} className="flex-shrink-0" />
+            <span className="flex-1 text-left">Cerrar Sesión</span>
+          </button>
+        </div>
+      </nav>
     </aside>
     </>
   );

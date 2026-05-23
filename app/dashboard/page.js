@@ -73,12 +73,12 @@ export default function DashboardPage() {
     <div className="page-enter">
       <Header title="Dashboard" subtitle={labelFecha} />
 
-      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div className="p-4 pt-2 sm:p-6 sm:pt-2 lg:p-8 lg:pt-2 space-y-2 sm:space-y-4">
         {/* ── Selector de fecha ──────────────────────────────────────── */}
         <div className="card p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-xs font-semibold text-slate-500 mr-1">Mostrar:</span>
 
-          {[['todos','Todos los datos', null], ['hoy','Hoy', null], ['especifica','Fecha específica', null]].map(([modo, lbl]) => (
+          {[['todos','Todos', null], ['hoy','Hoy', null], ['especifica','Fecha', null]].map(([modo, lbl]) => (
             <button key={modo} onClick={() => setModoFecha(modo)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
                 ${modoFecha === modo
