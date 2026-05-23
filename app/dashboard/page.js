@@ -1,13 +1,14 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { EstadoBadge, TipoBadge } from '@/components/StatusBadge';
 import { useData, useAuth } from '@/components/AppProvider';
 import {
   ClipboardList, CheckCircle, Clock, AlertCircle,
-  Activity, Calendar, TrendingUp, Users, Stethoscope, ArrowRight
+  Activity, Calendar, TrendingUp, Users, Stethoscope, ArrowRight, CalendarDays, CalendarRange
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const estadoStats = [
   { key: 'pendiente',   label: 'Pendientes',   icon: Clock,          color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-100' },
@@ -18,46 +19,91 @@ const estadoStats = [
   { key: 'finalizado',  label: 'Finalizados',  icon: TrendingUp,     color: 'text-slate-600',  bg: 'bg-slate-50 border-slate-100' },
 ];
 
-const PIE_COLORS = ['#f59e0b', '#3b82f6', '#a855f7', '#f97316', '#10b981', '#64748b', '#ef4444', '#dc2626'];
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 export default function DashboardPage() {
   const { casos, planes, resolveCaso, getQuirofanoById } = useData();
   const { user } = useAuth();
-  const hoy = '2026-05-21';
+
+  const [modoFecha, setModoFecha]       = useState('hoy');   // 'todos' | 'hoy' | 'especifica'
+  const [fechaEspecifica, setFechaEsp]  = useState(todayISO);
+
+  const fechaActiva = modoFecha === 'todos' ? null
+    : modoFecha === 'hoy' ? todayISO()
+    : fechaEspecifica;
+
+  // Casos filtrados por fecha de creación (o todos si no hay filtro)
+  const casosFiltrados = fechaActiva
+    ? casos.filter(c => c.createdAt?.slice(0, 10) === fechaActiva)
+    : casos;
+
+  // Planes filtrados por fecha del plan
+  const planesDia = fechaActiva
+    ? planes.filter(p => p.fecha === fechaActiva)
+    : planes;
 
   const statCounts = estadoStats.map(s => ({
     ...s,
-    count: casos.filter(c => c.estado === s.key).length,
+    count: casosFiltrados.filter(c => c.estado === s.key).length,
   }));
 
-  const total = casos.length;
-  const emergencias = casos.filter(c => c.tipo === 'emergencia').length;
-  const electivos = total - emergencias;
-
-  const distribucionEstado = Object.entries(
-    casos.reduce((acc, c) => { acc[c.estado] = (acc[c.estado] || 0) + 1; return acc; }, {})
-  ).map(([name, value]) => ({ name, value }));
+  const total      = casosFiltrados.length;
+  const emergencias = casosFiltrados.filter(c => c.tipo === 'emergencia').length;
+  const electivos   = total - emergencias;
 
   const barData = [
-    { name: 'Pendiente', value: casos.filter(c => c.estado === 'pendiente').length, fill: '#f59e0b' },
-    { name: 'Aprobada', value: casos.filter(c => c.estado === 'aprobada').length, fill: '#3b82f6' },
-    { name: 'Programada', value: casos.filter(c => c.estado === 'programada').length, fill: '#a855f7' },
-    { name: 'En Admisión', value: casos.filter(c => c.estado === 'en_admision').length, fill: '#f97316' },
-    { name: 'En Curso', value: casos.filter(c => c.estado === 'en_curso').length, fill: '#10b981' },
-    { name: 'Finalizado', value: casos.filter(c => c.estado === 'finalizado').length, fill: '#64748b' },
+    { name: 'Pendiente',   value: casosFiltrados.filter(c => c.estado === 'pendiente').length,   fill: '#f59e0b' },
+    { name: 'Aprobada',    value: casosFiltrados.filter(c => c.estado === 'aprobada').length,    fill: '#3b82f6' },
+    { name: 'Programada',  value: casosFiltrados.filter(c => c.estado === 'programada').length,  fill: '#a855f7' },
+    { name: 'En Admisión', value: casosFiltrados.filter(c => c.estado === 'en_admision').length, fill: '#f97316' },
+    { name: 'En Curso',    value: casosFiltrados.filter(c => c.estado === 'en_curso').length,    fill: '#10b981' },
+    { name: 'Finalizado',  value: casosFiltrados.filter(c => c.estado === 'finalizado').length,  fill: '#64748b' },
   ];
 
-  const planesHoy = planes.filter(p => p.fecha === hoy);
   const casosUrgentes = casos.filter(c => c.tipo === 'emergencia' && ['en_admision', 'en_curso', 'programada'].includes(c.estado));
+
+  const labelFecha = modoFecha === 'todos' ? 'Todos los datos'
+    : modoFecha === 'hoy' ? `Hoy — ${new Date(todayISO() + 'T12:00:00').toLocaleDateString('es-HN', { weekday: 'long', day: 'numeric', month: 'long' })}`
+    : fechaActiva ? new Date(fechaActiva + 'T12:00:00').toLocaleDateString('es-HN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
   return (
     <div className="page-enter">
-      <Header
-        title="Dashboard"
-        subtitle={`Hoy: ${new Date(hoy + 'T12:00:00').toLocaleDateString('es-HN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
-      />
+      <Header title="Dashboard" subtitle={labelFecha} />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+        {/* ── Selector de fecha ──────────────────────────────────────── */}
+        <div className="card p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-3">
+          <span className="text-xs font-semibold text-slate-500 mr-1">Mostrar:</span>
+
+          {[['todos','Todos los datos', null], ['hoy','Hoy', null], ['especifica','Fecha específica', null]].map(([modo, lbl]) => (
+            <button key={modo} onClick={() => setModoFecha(modo)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
+                ${modoFecha === modo
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'}`}>
+              {lbl}
+            </button>
+          ))}
+
+          {modoFecha === 'especifica' && (
+            <input
+              type="date"
+              className="input-field py-1 text-xs w-auto"
+              value={fechaEspecifica}
+              onChange={e => setFechaEsp(e.target.value)}
+            />
+          )}
+
+          {modoFecha !== 'todos' && (
+            <span className="ml-auto text-xs text-slate-400 hidden sm:block">
+              {total} caso{total !== 1 ? 's' : ''} · {planesDia.length} plan{planesDia.length !== 1 ? 'es' : ''}
+            </span>
+          )}
+        </div>
+
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
           {statCounts.map(({ key, label, icon: Icon, color, bg, count }) => (
@@ -130,16 +176,20 @@ export default function DashboardPage() {
           {/* Plan hoy */}
           <div className="card">
             <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100">
-              <h2 className="section-title text-sm sm:text-base">Cirugías de Hoy</h2>
+              <h2 className="section-title text-sm sm:text-base">
+                {modoFecha === 'todos' ? 'Todas las Cirugías' : modoFecha === 'hoy' ? 'Cirugías de Hoy' : 'Cirugías del Día'}
+              </h2>
               <Link href="/planes" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
                 Ver plan <ArrowRight size={12} />
               </Link>
             </div>
             <div className="divide-y divide-slate-50">
-              {planesHoy.length === 0 && (
-                <p className="text-xs sm:text-sm text-slate-400 p-4 sm:p-5 text-center">Sin cirugías programadas para hoy.</p>
+              {planesDia.length === 0 && (
+                <p className="text-xs sm:text-sm text-slate-400 p-4 sm:p-5 text-center">
+                  {modoFecha === 'todos' ? 'Sin cirugías registradas.' : 'Sin cirugías programadas para esta fecha.'}
+                </p>
               )}
-              {planesHoy.map(plan => {
+              {planesDia.map(plan => {
                 const caso = casos.find(c => c._id === plan.caso);
                 const resuelto = caso ? resolveCaso(caso) : null;
                 const q = getQuirofanoById(plan.quirofano);
@@ -218,7 +268,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {casos.slice(0, 6).map(c => {
+                {casosFiltrados.slice(0, 6).map(c => {
                   const r = resolveCaso(c);
                   return (
                     <tr key={c._id} className="hover:bg-slate-50 transition-colors">
