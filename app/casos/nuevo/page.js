@@ -3,12 +3,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useData } from '@/components/AppProvider';
-import { ArrowLeft, Save, AlertTriangle, Plus, ChevronDown, User, Stethoscope, FileSearch, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, Plus, ChevronDown, User, Stethoscope } from 'lucide-react';
 import Link from 'next/link';
 import PatientSelectorModal from '@/components/PatientSelectorModal';
 import EspecialistaSelectorModal from '@/components/EspecialistaSelectorModal';
-import DiagnosticoSelectorModal from '@/components/DiagnosticoSelectorModal';
-import ProcedimientoSelectorModal from '@/components/ProcedimientoSelectorModal';
 
 export default function NuevoCasoPage() {
   const router = useRouter();
@@ -21,6 +19,8 @@ export default function NuevoCasoPage() {
     asistentesExternos: [],
     diagnostico: '',
     procedimiento: '',
+    diagnosticoNombre: '',
+    procedimientoNombre: '',
     duracionEstimadaMin: '',
     prioridad: 'media',
     observaciones: '',
@@ -32,13 +32,8 @@ export default function NuevoCasoPage() {
 
   const [pacienteSeleccionado, setPacienteSeleccionado]           = useState(null);
   const [especialistaSeleccionado, setEspecialistaSeleccionado]   = useState(null);
-  const [diagnosticoSeleccionado, setDiagnosticoSeleccionado]     = useState(null);
-  const [procedimientoSeleccionado, setProcedimientoSeleccionado] = useState(null);
-
   const [mostrarModalPaciente, setMostrarModalPaciente]           = useState(false);
   const [mostrarModalEspecialista, setMostrarModalEspecialista]   = useState(false);
-  const [mostrarModalDiagnostico, setMostrarModalDiagnostico]     = useState(false);
-  const [mostrarModalProcedimiento, setMostrarModalProcedimiento] = useState(false);
 
   const [formAsistente, setFormAsistente]     = useState({ nombre: '', especialidad: '', codigoColegiado: '' });
   const [mostrarFormAsistente, setMostrarFormAsistente] = useState(false);
@@ -75,20 +70,12 @@ export default function NuevoCasoPage() {
 
   const handleSelectPaciente      = p  => { setPacienteSeleccionado(p);      set('paciente', p._id);             setErrors(e => ({ ...e, paciente: '' })); };
   const handleSelectEspecialista  = ep => { setEspecialistaSeleccionado(ep);  set('especialistaPrincipal', ep._id); setErrors(e => ({ ...e, especialistaPrincipal: '' })); };
-  const handleSelectDiagnostico   = d  => { setDiagnosticoSeleccionado(d);    set('diagnostico', d._id);           setErrors(e => ({ ...e, diagnostico: '' })); };
-  const handleSelectProcedimiento = p  => {
-    setProcedimientoSeleccionado(p);
-    set('procedimiento', p._id);
-    if (p.duracionPromedioMin) set('duracionEstimadaMin', p.duracionPromedioMin);
-    setErrors(e => ({ ...e, procedimiento: '' }));
-  };
-
   const validate = () => {
     const e = {};
     if (!form.paciente) e.paciente = 'Requerido';
     if (!form.especialistaPrincipal) e.especialistaPrincipal = 'Requerido';
-    if (!form.procedimiento) e.procedimiento = 'Requerido';
-    if (!form.diagnostico) e.diagnostico = 'Requerido';
+    if (!form.procedimientoNombre.trim()) e.procedimientoNombre = 'Requerido';
+    if (!form.diagnosticoNombre.trim()) e.diagnosticoNombre = 'Requerido';
     if (form.tipo === 'emergencia' && !form.motivoEmergencia) e.motivoEmergencia = 'Requerido para emergencias';
     if (form.equipoQuirurgico.length === 0) e.equipo = 'Debe agregar al menos un asistente';
     return e;
@@ -333,62 +320,24 @@ export default function NuevoCasoPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="label">Diagnóstico *</label>
-                {diagnosticoSeleccionado ? (
-                  <div className="p-3 rounded-lg border-2 border-blue-200 bg-blue-50 flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      {diagnosticoSeleccionado.codigo && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-blue-200 text-blue-800 mb-1">
-                          {diagnosticoSeleccionado.codigo}
-                        </span>
-                      )}
-                      <p className="text-sm font-medium text-blue-900 line-clamp-1">{diagnosticoSeleccionado.nombre}</p>
-                    </div>
-                    <button type="button" onClick={() => { setDiagnosticoSeleccionado(null); set('diagnostico', ''); }}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium flex-shrink-0">Cambiar</button>
-                  </div>
-                ) : (
-                  <button type="button" onClick={() => setMostrarModalDiagnostico(true)}
-                    className={`w-full p-3 rounded-lg border-2 border-dashed transition-all text-left
-                      ${errors.diagnostico ? 'border-red-400 bg-red-50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50'}`}>
-                    <div className="flex items-center gap-2">
-                      <FileSearch size={18} className={errors.diagnostico ? 'text-red-500' : 'text-slate-400'} />
-                      <div>
-                        <p className={`font-medium text-sm ${errors.diagnostico ? 'text-red-700' : 'text-slate-600'}`}>Seleccionar Diagnóstico</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Click para buscar CIE-10</p>
-                      </div>
-                    </div>
-                  </button>
-                )}
-                {errors.diagnostico && <p className="text-xs text-red-500 mt-1">{errors.diagnostico}</p>}
+                <input
+                  className={`input-field ${errors.diagnosticoNombre ? 'border-red-400' : ''}`}
+                  value={form.diagnosticoNombre}
+                  onChange={e => { set('diagnosticoNombre', e.target.value); setErrors(er => ({ ...er, diagnosticoNombre: '' })); }}
+                  placeholder="Ej. Apendicitis aguda"
+                />
+                {errors.diagnosticoNombre && <p className="text-xs text-red-500 mt-1">{errors.diagnosticoNombre}</p>}
               </div>
 
               <div>
                 <label className="label">Procedimiento *</label>
-                {procedimientoSeleccionado ? (
-                  <div className="p-3 rounded-lg border-2 border-blue-200 bg-blue-50 flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-blue-900">{procedimientoSeleccionado.nombre}</p>
-                      {procedimientoSeleccionado.duracionPromedioMin && (
-                        <p className="text-xs text-blue-700 mt-0.5">{procedimientoSeleccionado.duracionPromedioMin} min</p>
-                      )}
-                    </div>
-                    <button type="button" onClick={() => { setProcedimientoSeleccionado(null); set('procedimiento', ''); }}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium flex-shrink-0">Cambiar</button>
-                  </div>
-                ) : (
-                  <button type="button" onClick={() => setMostrarModalProcedimiento(true)}
-                    className={`w-full p-3 rounded-lg border-2 border-dashed transition-all text-left
-                      ${errors.procedimiento ? 'border-red-400 bg-red-50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50'}`}>
-                    <div className="flex items-center gap-2">
-                      <FlaskConical size={18} className={errors.procedimiento ? 'text-red-500' : 'text-slate-400'} />
-                      <div>
-                        <p className={`font-medium text-sm ${errors.procedimiento ? 'text-red-700' : 'text-slate-600'}`}>Seleccionar Procedimiento</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Click para buscar</p>
-                      </div>
-                    </div>
-                  </button>
-                )}
-                {errors.procedimiento && <p className="text-xs text-red-500 mt-1">{errors.procedimiento}</p>}
+                <input
+                  className={`input-field ${errors.procedimientoNombre ? 'border-red-400' : ''}`}
+                  value={form.procedimientoNombre}
+                  onChange={e => { set('procedimientoNombre', e.target.value); setErrors(er => ({ ...er, procedimientoNombre: '' })); }}
+                  placeholder="Ej. Apendicectomía laparoscópica"
+                />
+                {errors.procedimientoNombre && <p className="text-xs text-red-500 mt-1">{errors.procedimientoNombre}</p>}
               </div>
 
               <div>
@@ -432,12 +381,6 @@ export default function NuevoCasoPage() {
       )}
       {mostrarModalEspecialista && (
         <EspecialistaSelectorModal onSelect={handleSelectEspecialista} onClose={() => setMostrarModalEspecialista(false)} />
-      )}
-      {mostrarModalDiagnostico && (
-        <DiagnosticoSelectorModal onSelect={handleSelectDiagnostico} onClose={() => setMostrarModalDiagnostico(false)} />
-      )}
-      {mostrarModalProcedimiento && (
-        <ProcedimientoSelectorModal onSelect={handleSelectProcedimiento} onClose={() => setMostrarModalProcedimiento(false)} />
       )}
     </div>
   );

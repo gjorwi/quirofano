@@ -52,7 +52,7 @@ function PlanCard({ plan, casos, resolveCaso, getQuirofanoById, qColorLight }) {
           <TipoBadge tipo={caso.tipo} />
         </div>
         <p className="text-sm font-semibold truncate">{r.pacienteObj?.nombre}</p>
-        <p className="text-xs opacity-75 truncate mt-0.5">{r.procedimientoObj?.nombre}</p>
+        <p className="text-xs opacity-75 truncate mt-0.5">{caso.procedimientoNombre || r.procedimientoObj?.nombre}</p>
         <div className="flex items-center gap-1 mt-1.5 text-xs opacity-70">
           <User size={10} />
           <span className="truncate">{r.especialistaObj?.nombre}</span>
@@ -293,7 +293,7 @@ export default function PlanesPage() {
                             </div>
                           </td>
                           <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-slate-800 truncate max-w-[90px] sm:max-w-none">{r?.pacienteObj?.nombre}</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs text-slate-600 truncate max-w-[120px] hidden sm:table-cell">{r?.procedimientoObj?.nombre}</td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs text-slate-600 truncate max-w-[120px] hidden sm:table-cell">{caso?.procedimientoNombre || r?.procedimientoObj?.nombre}</td>
                           <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs text-slate-600 hidden md:table-cell">{r?.especialistaObj?.nombre}</td>
                           <td className="px-2 sm:px-4 py-2 sm:py-3"><EstadoBadge estado={caso?.estado} /></td>
                         </tr>

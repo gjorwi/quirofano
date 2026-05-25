@@ -127,7 +127,7 @@ export default function ProgramarPlanModal({ casoPreseleccionado, onClose }) {
                       <p className="text-sm font-semibold text-blue-900 truncate">{casoRes?.pacienteObj?.nombre}</p>
                       {casoSel && <TipoBadge tipo={casoSel.tipo} />}
                     </div>
-                    <p className="text-xs text-blue-700 truncate">{casoRes?.procedimientoObj?.nombre}</p>
+                    <p className="text-xs text-blue-700 truncate">{casoSel?.procedimientoNombre || casoRes?.procedimientoObj?.nombre}</p>
                     <p className="text-xs text-blue-600 mt-0.5">{casoSel?.duracionEstimadaMin} min · {casoRes?.especialistaObj?.nombre}</p>
                   </div>
                   {!casoPreseleccionado && (

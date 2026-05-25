@@ -146,6 +146,12 @@ function DataProvider({ children, currentUser }) {
     return plan;
   }, []);
 
+  const actualizarPlan = useCallback(async (id, data) => {
+    const actualizado = await api.actualizarPlan(id, data);
+    setPlanes(prev => prev.map(p => p._id === id ? actualizado : p));
+    return actualizado;
+  }, []);
+
   const eliminarPlan = useCallback(async (planId) => {
     await api.eliminarPlan(planId);
     setPlanes(prev => prev.filter(p => p._id !== planId));
@@ -287,7 +293,7 @@ function DataProvider({ children, currentUser }) {
       dataLoading,
       resolveCaso, getQuirofanoById,
       crearCaso, actualizarCaso, actualizarEstadoCaso, aprobarCaso, rechazarCaso, cancelarCaso,
-      crearPlan, eliminarPlan,
+      crearPlan, actualizarPlan, eliminarPlan,
       crearAdmision, actualizarAdmision,
       crearPaciente, actualizarPaciente, eliminarPaciente,
       crearEspecialista, actualizarEspecialista, eliminarEspecialista,

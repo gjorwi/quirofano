@@ -1,15 +1,12 @@
 import Link from 'next/link';
 import Header from '@/components/Header';
-import { Users, Stethoscope, Building2, FlaskConical, FileSearch, Package, UserCog, ShieldAlert } from 'lucide-react';
+import { Users, Stethoscope, Building2, UserCog, ShieldAlert } from 'lucide-react';
 
 const catalogs = [
   { href: '/configuracion/usuarios',      label: 'Usuarios',        desc: 'Gestión de usuarios del sistema',       icon: UserCog,      color: 'bg-indigo-500',  count: 9 },
   { href: '/configuracion/pacientes',     label: 'Pacientes',       desc: 'Gestión de pacientes registrados',      icon: Users,        color: 'bg-blue-500',    count: 8 },
   { href: '/configuracion/especialistas', label: 'Especialistas',   desc: 'Cirujanos y personal especializado',    icon: Stethoscope,  color: 'bg-purple-500',  count: 6 },
   { href: '/configuracion/quirofanos',    label: 'Quirófanos',      desc: 'Salas quirúrgicas y equipamiento',      icon: Building2,    color: 'bg-emerald-500', count: 4 },
-  { href: '/configuracion/procedimientos',label: 'Procedimientos',  desc: 'Catálogo de procedimientos quirúrgicos',icon: FlaskConical, color: 'bg-orange-500',  count: 10 },
-  { href: '/configuracion/diagnosticos',  label: 'Diagnósticos',    desc: 'Catálogo de diagnósticos CIE-10',       icon: FileSearch,   color: 'bg-red-500',     count: 10 },
-  { href: '/configuracion/insumos',       label: 'Insumos',         desc: 'Materiales y suministros quirúrgicos',  icon: Package,      color: 'bg-teal-500',    count: 10 },
 ];
 
 export default function ConfiguracionPage() {

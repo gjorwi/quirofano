@@ -6,9 +6,7 @@ import Header from '@/components/Header';
 import { useAuth } from '@/components/AppProvider';
 import { useData } from '@/components/AppProvider';
 import PatientSelectorModal from '@/components/PatientSelectorModal';
-import DiagnosticoSelectorModal from '@/components/DiagnosticoSelectorModal';
-import ProcedimientoSelectorModal from '@/components/ProcedimientoSelectorModal';
-import { ArrowLeft, Send, User, FileSearch, FlaskConical, Plus, X, ChevronDown, Save } from 'lucide-react';
+import { ArrowLeft, Send, User, Plus, ChevronDown, Save } from 'lucide-react';
 
 export default function NuevoCasoEspecialistaPage() {
   const { user } = useAuth();
@@ -22,6 +20,8 @@ export default function NuevoCasoEspecialistaPage() {
     asistentesExternos: [],
     diagnostico: '',
     procedimiento: '',
+    diagnosticoNombre: '',
+    procedimientoNombre: '',
     duracionEstimadaMin: '',
     prioridad: 'media',
     observaciones: '',
@@ -36,10 +36,6 @@ export default function NuevoCasoEspecialistaPage() {
   const [guardandoAsistente, setGuardandoAsistente] = useState(false);
   const [mostrarModalPaciente, setMostrarModalPaciente] = useState(false);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
-  const [mostrarModalDiagnostico, setMostrarModalDiagnostico] = useState(false);
-  const [diagnosticoSeleccionado, setDiagnosticoSeleccionado] = useState(null);
-  const [mostrarModalProcedimiento, setMostrarModalProcedimiento] = useState(false);
-  const [procedimientoSeleccionado, setProcedimientoSeleccionado] = useState(null);
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
 
@@ -74,24 +70,11 @@ export default function NuevoCasoEspecialistaPage() {
     set('paciente', p._id);
   };
 
-  const handleSelectDiagnostico = (d) => {
-    setDiagnosticoSeleccionado(d);
-    set('diagnostico', d._id);
-  };
-
-  const handleSelectProcedimiento = (p) => {
-    setProcedimientoSeleccionado(p);
-    set('procedimiento', p._id);
-    if (p.duracionEstimadaMin) {
-      set('duracionEstimadaMin', p.duracionEstimadaMin);
-    }
-  };
-
   const validate = () => {
     const e = {};
     if (!form.paciente) e.paciente = 'Requerido';
-    if (!form.procedimiento) e.procedimiento = 'Requerido';
-    if (!form.diagnostico) e.diagnostico = 'Requerido';
+    if (!form.procedimientoNombre.trim()) e.procedimientoNombre = 'Requerido';
+    if (!form.diagnosticoNombre.trim()) e.diagnosticoNombre = 'Requerido';
     if (form.tipo === 'emergencia' && !form.motivoEmergencia) e.motivoEmergencia = 'Requerido';
     if (form.equipoQuirurgico.length === 0) e.equipo = 'Debe agregar al menos un asistente';
     return e;
@@ -306,88 +289,23 @@ export default function NuevoCasoEspecialistaPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="label">Diagnóstico *</label>
-                {diagnosticoSeleccionado ? (
-                  <div className="p-3 rounded-lg border-2 border-blue-200 bg-blue-50 flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-blue-200 text-blue-800">
-                          {diagnosticoSeleccionado.codigo}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium text-blue-900 line-clamp-1">{diagnosticoSeleccionado.nombre}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setDiagnosticoSeleccionado(null); set('diagnostico', ''); }}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium flex-shrink-0"
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setMostrarModalDiagnostico(true)}
-                    className={`w-full p-3 rounded-lg border-2 border-dashed transition-all text-left
-                      ${errors.diagnostico ? 'border-red-400 bg-red-50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50'}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileSearch size={18} className={errors.diagnostico ? 'text-red-500' : 'text-slate-400'} />
-                      <div>
-                        <p className={`font-medium text-sm ${errors.diagnostico ? 'text-red-700' : 'text-slate-600'}`}>
-                          Seleccionar Diagnóstico
-                        </p>
-                        <p className="text-xs text-slate-400 mt-0.5">Click para buscar CIE-10</p>
-                      </div>
-                    </div>
-                  </button>
-                )}
-                {errors.diagnostico && <p className="text-xs text-red-500 mt-1">{errors.diagnostico}</p>}
+                <input
+                  className={`input-field ${errors.diagnosticoNombre ? 'border-red-400' : ''}`}
+                  value={form.diagnosticoNombre}
+                  onChange={e => set('diagnosticoNombre', e.target.value)}
+                  placeholder="Ej. Apendicitis aguda"
+                />
+                {errors.diagnosticoNombre && <p className="text-xs text-red-500 mt-1">{errors.diagnosticoNombre}</p>}
               </div>
               <div>
                 <label className="label">Procedimiento *</label>
-                {procedimientoSeleccionado ? (
-                  <div className="p-3 rounded-lg border-2 border-blue-200 bg-blue-50 flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-blue-900">{procedimientoSeleccionado.nombre}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-200 text-blue-800">
-                          {procedimientoSeleccionado.tipo}
-                        </span>
-                        {procedimientoSeleccionado.duracionEstimadaMin && (
-                          <span className="text-xs text-blue-700">
-                            {procedimientoSeleccionado.duracionEstimadaMin} min
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setProcedimientoSeleccionado(null); set('procedimiento', ''); }}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium flex-shrink-0"
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setMostrarModalProcedimiento(true)}
-                    className={`w-full p-3 rounded-lg border-2 border-dashed transition-all text-left
-                      ${errors.procedimiento ? 'border-red-400 bg-red-50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50'}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FlaskConical size={18} className={errors.procedimiento ? 'text-red-500' : 'text-slate-400'} />
-                      <div>
-                        <p className={`font-medium text-sm ${errors.procedimiento ? 'text-red-700' : 'text-slate-600'}`}>
-                          Seleccionar Procedimiento
-                        </p>
-                        <p className="text-xs text-slate-400 mt-0.5">Click para buscar</p>
-                      </div>
-                    </div>
-                  </button>
-                )}
-                {errors.procedimiento && <p className="text-xs text-red-500 mt-1">{errors.procedimiento}</p>}
+                <input
+                  className={`input-field ${errors.procedimientoNombre ? 'border-red-400' : ''}`}
+                  value={form.procedimientoNombre}
+                  onChange={e => set('procedimientoNombre', e.target.value)}
+                  placeholder="Ej. Apendicectomía laparoscópica"
+                />
+                {errors.procedimientoNombre && <p className="text-xs text-red-500 mt-1">{errors.procedimientoNombre}</p>}
               </div>
               <div>
                 <label className="label">Duración Estimada (min)</label>
@@ -419,19 +337,6 @@ export default function NuevoCasoEspecialistaPage() {
         />
       )}
 
-      {mostrarModalDiagnostico && (
-        <DiagnosticoSelectorModal
-          onSelect={handleSelectDiagnostico}
-          onClose={() => setMostrarModalDiagnostico(false)}
-        />
-      )}
-
-      {mostrarModalProcedimiento && (
-        <ProcedimientoSelectorModal
-          onSelect={handleSelectProcedimiento}
-          onClose={() => setMostrarModalProcedimiento(false)}
-        />
-      )}
     </div>
   );
 }

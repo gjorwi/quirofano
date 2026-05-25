@@ -16,12 +16,15 @@ const FLUJO = ['pendiente', 'aprobada', 'programada', 'en_admision', 'en_curso',
 
 export default function CasoDetallePage() {
   const { id } = useParams();
-  const { casos, admisiones, especialistas, actualizarCaso, aprobarCaso, rechazarCaso, actualizarEstadoCaso, cancelarCaso, resolveCaso, getQuirofanoById } = useData();
+  const { casos, admisiones, especialistas, quirofanos, actualizarCaso, actualizarPlan, aprobarCaso, rechazarCaso, actualizarEstadoCaso, cancelarCaso, resolveCaso, getQuirofanoById } = useData();
   const [editandoEquipo, setEditandoEquipo] = useState(false);
   const [equipoEdit,    setEquipoEdit]    = useState([]);
   const [externosEdit,  setExternosEdit]  = useState([]);
   const [inputExterno,  setInputExterno]  = useState('');
   const [savingEquipo,  setSavingEquipo]  = useState(false);
+  const [editandoPlan,  setEditandoPlan]  = useState(false);
+  const [planEdit,      setPlanEdit]      = useState({ quirofano: '', fecha: '', horaInicio: '', horaFinEstimada: '' });
+  const [savingPlan,    setSavingPlan]    = useState(false);
 
   const caso = casos.find(c => c._id === id);
 
@@ -37,6 +40,24 @@ export default function CasoDetallePage() {
   const r = resolveCaso(caso);
   const admision = admisiones.find(a => String(a.caso) === id);
   const quirofano = r.planObj ? getQuirofanoById(r.planObj.quirofano) : null;
+
+  const abrirEditPlan = () => {
+    setPlanEdit({
+      quirofano:       r.planObj.quirofano      || '',
+      fecha:           r.planObj.fecha          || '',
+      horaInicio:      r.planObj.horaInicio     || '',
+      horaFinEstimada: r.planObj.horaFinEstimada|| '',
+    });
+    setEditandoPlan(true);
+  };
+
+  const guardarPlanEdit = async () => {
+    setSavingPlan(true);
+    try {
+      await actualizarPlan(r.planObj._id, planEdit);
+      setEditandoPlan(false);
+    } finally { setSavingPlan(false); }
+  };
 
   const transicionesDisponibles = () => {
     const t = [];
@@ -248,8 +269,8 @@ export default function CasoDetallePage() {
               <FileText size={16} className="text-blue-500" /> Procedimiento Clínico
             </h2>
             <div className="space-y-2">
-              <InfoRow label="Diagnóstico" value={`${r.diagnosticoObj?.codigo} – ${r.diagnosticoObj?.nombre}`} />
-              <InfoRow label="Procedimiento" value={r.procedimientoObj?.nombre} />
+              <InfoRow label="Diagnóstico" value={caso.diagnosticoNombre || (r.diagnosticoObj ? `${r.diagnosticoObj.codigo} – ${r.diagnosticoObj.nombre}` : '—')} />
+              <InfoRow label="Procedimiento" value={caso.procedimientoNombre || r.procedimientoObj?.nombre || '—'} />
               <InfoRow label="Duración Estimada" value={caso.duracionEstimadaMin ? `${caso.duracionEstimadaMin} min` : '—'} />
               {caso.observaciones && <InfoRow label="Observaciones" value={caso.observaciones} />}
             </div>
@@ -258,17 +279,70 @@ export default function CasoDetallePage() {
           {/* Plan */}
           {r.planObj && (
             <div className="card p-5 space-y-3">
-              <h2 className="section-title flex items-center gap-2">
-                <Calendar size={16} className="text-blue-500" /> Plan Quirúrgico
-              </h2>
-              <div className="space-y-2">
-                <InfoRow label="Fecha" value={new Date(r.planObj.fecha + 'T12:00:00').toLocaleDateString('es-HN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
-                <InfoRow label="Hora Inicio" value={r.planObj.horaInicio} />
-                <InfoRow label="Hora Fin Estimada" value={r.planObj.horaFinEstimada} />
-                <InfoRow label="Quirófano" value={`${quirofano?.numero} – ${quirofano?.ubicacion}`} />
-                <InfoRow label="Tipo de Quirófano" value={quirofano?.tipo} />
-                {r.planObj?.programadoPor && <InfoRow label="Programado por" value={r.planObj.programadoPor} />}
+              <div className="flex items-center justify-between">
+                <h2 className="section-title flex items-center gap-2">
+                  <Calendar size={16} className="text-blue-500" /> Plan Quirúrgico
+                </h2>
+                {!['en_curso','finalizado'].includes(caso.estado) && (
+                  editandoPlan ? (
+                    <button onClick={() => setEditandoPlan(false)} className="text-xs text-slate-500 hover:text-slate-700">
+                      <X size={14} />
+                    </button>
+                  ) : (
+                    <button onClick={abrirEditPlan}
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      <Pencil size={12} /> Reprogramar
+                    </button>
+                  )
+                )}
               </div>
+
+              {editandoPlan ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="label text-xs">Fecha</label>
+                      <input type="date" className="input-field text-sm"
+                        value={planEdit.fecha} onChange={e => setPlanEdit(p => ({ ...p, fecha: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="label text-xs">Quirófano</label>
+                      <select className="select-field text-sm" value={planEdit.quirofano}
+                        onChange={e => setPlanEdit(p => ({ ...p, quirofano: e.target.value }))}>
+                        <option value="">Seleccione…</option>
+                        {quirofanos.filter(q => q.habilitado).map(q => (
+                          <option key={q._id} value={q._id}>{q.numero} – {q.ubicacion}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label text-xs">Hora Inicio</label>
+                      <input type="time" className="input-field text-sm"
+                        value={planEdit.horaInicio} onChange={e => setPlanEdit(p => ({ ...p, horaInicio: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="label text-xs">Hora Fin Estimada</label>
+                      <input type="time" className="input-field text-sm"
+                        value={planEdit.horaFinEstimada} onChange={e => setPlanEdit(p => ({ ...p, horaFinEstimada: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setEditandoPlan(false)} className="btn-secondary text-xs">Cancelar</button>
+                    <button onClick={guardarPlanEdit} disabled={savingPlan} className="btn-primary text-xs flex items-center gap-1">
+                      <Save size={12} /> {savingPlan ? 'Guardando…' : 'Guardar cambios'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <InfoRow label="Fecha" value={new Date(r.planObj.fecha + 'T12:00:00').toLocaleDateString('es-HN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
+                  <InfoRow label="Hora Inicio" value={r.planObj.horaInicio} />
+                  <InfoRow label="Hora Fin Estimada" value={r.planObj.horaFinEstimada} />
+                  <InfoRow label="Quirófano" value={`${quirofano?.numero} – ${quirofano?.ubicacion}`} />
+                  <InfoRow label="Tipo de Quirófano" value={quirofano?.tipo} />
+                  {r.planObj?.programadoPor && <InfoRow label="Programado por" value={r.planObj.programadoPor} />}
+                </div>
+              )}
             </div>
           )}
         </div>
