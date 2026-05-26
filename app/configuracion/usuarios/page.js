@@ -76,6 +76,20 @@ export default function UsuariosPage() {
                 </select>
               </div>
               {formData.rol === 'especialista' && (
+                <div className="md:col-span-2 flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
+                  <input
+                    type="checkbox"
+                    id="esJefeServicio"
+                    checked={!!formData.esJefeServicio}
+                    onChange={e => set('esJefeServicio', e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer"
+                  />
+                  <label htmlFor="esJefeServicio" className="text-sm font-medium text-blue-800 cursor-pointer select-none">
+                    Jefe de Servicio — puede ver el Plan Quirúrgico de todos los especialistas
+                  </label>
+                </div>
+              )}
+              {formData.rol === 'especialista' && (
                 <div className="md:col-span-2">
                   <label className="label">Vincular a Especialista</label>
                   <select className="select-field" value={formData.especialistaId || ''} onChange={e => set('especialistaId', e.target.value)}>
@@ -145,7 +159,7 @@ export default function UsuariosPage() {
                         </span>
                       </td>
                       <td className="table-cell text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => handleEdit(u)}
                             className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors"

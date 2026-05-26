@@ -1,6 +1,9 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
-import { Users, Stethoscope, Building2, UserCog, ShieldAlert } from 'lucide-react';
+import { Users, Stethoscope, Building2, UserCog, ShieldAlert, Monitor } from 'lucide-react';
+import { api } from '@/lib/apiClient';
 
 const catalogs = [
   { href: '/configuracion/usuarios',      label: 'Usuarios',        desc: 'Gestión de usuarios del sistema',       icon: UserCog,      color: 'bg-indigo-500',  count: 9 },
@@ -10,6 +13,21 @@ const catalogs = [
 ];
 
 export default function ConfiguracionPage() {
+  const [settings, setSettings] = useState({ hideDemoLogin: false });
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  useEffect(() => {
+    api.getSettings().then(s => setSettings(s || {})).catch(() => {});
+  }, []);
+
+  const toggleSetting = async (key) => {
+    const next = { ...settings, [key]: !settings[key] };
+    setSettings(next);
+    setSavingSettings(true);
+    try { await api.updateSettings({ [key]: next[key] }); }
+    finally { setSavingSettings(false); }
+  };
+
   return (
     <div className="page-enter">
       <Header title="Configuración" subtitle="Administración de catálogos del sistema" />
@@ -37,6 +55,33 @@ export default function ConfiguracionPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </section>
+
+        {/* Sistema */}
+        <section>
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Sistema</h2>
+          <div className="card p-5 space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <Monitor size={18} className="text-slate-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Ocultar accesos de demostración</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Elimina los accesos de prueba de la pantalla de inicio de sesión</p>
+                </div>
+              </div>
+              <button
+                onClick={() => toggleSetting('hideDemoLogin')}
+                disabled={savingSettings}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none flex-shrink-0
+                  ${settings.hideDemoLogin ? 'bg-blue-600' : 'bg-slate-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
+                  ${settings.hideDemoLogin ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
           </div>
         </section>
 

@@ -137,9 +137,9 @@ export default function MisCasosPage() {
                         )}
                       </div>
                       <p className="font-semibold text-slate-800 text-base">{r.pacienteObj?.nombre}</p>
-                      <p className="text-sm text-slate-500 mt-0.5">{r.procedimientoObj?.nombre}</p>
+                      <p className="text-sm text-slate-500 mt-0.5">{c.procedimientoNombre || r.procedimientoObj?.nombre || '—'}</p>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {r.diagnosticoObj?.codigo} · {r.diagnosticoObj?.nombre}
+                        {c.diagnosticoNombre || (r.diagnosticoObj ? `${r.diagnosticoObj.codigo ? r.diagnosticoObj.codigo + ' · ' : ''}${r.diagnosticoObj.nombre}` : '')}
                       </p>
                     </div>
 

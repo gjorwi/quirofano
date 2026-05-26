@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { EstadoBadge, TipoBadge } from '@/components/StatusBadge';
-import { useData } from '@/components/AppProvider';
+import { useData, useAuth } from '@/components/AppProvider';
 import ProgramarPlanModal from '@/components/ProgramarPlanModal';
 import { ChevronLeft, ChevronRight, Calendar, Clock, Plus, MapPin, User, Printer } from 'lucide-react';
 
@@ -34,15 +35,16 @@ function formatFechaLarga(dateStr) {
   });
 }
 
-function PlanCard({ plan, casos, resolveCaso, getQuirofanoById, qColorLight }) {
+function PlanCard({ plan, casos, resolveCaso, getQuirofanoById, qColorLight, casoHref }) {
   const caso = casos.find(c => c._id === plan.caso);
   if (!caso) return null;
   const r = resolveCaso(caso);
   const q = getQuirofanoById(plan.quirofano);
   const colorLight = qColorLight || 'bg-slate-50 border-slate-200 text-slate-800';
+  const href = casoHref ? casoHref(caso._id) : `/casos/${caso._id}`;
 
   return (
-    <Link href={`/casos/${caso._id}`}>
+    <Link href={href}>
       <div className={`rounded-lg border p-3 mb-2 hover:shadow-md transition-shadow cursor-pointer ${colorLight}`}>
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5 text-xs font-bold">
@@ -57,6 +59,9 @@ function PlanCard({ plan, casos, resolveCaso, getQuirofanoById, qColorLight }) {
           <User size={10} />
           <span className="truncate">{r.especialistaObj?.nombre}</span>
         </div>
+        {r.especialistaObj?.especialidad && (
+          <p className="text-xs opacity-60 truncate mt-0.5 pl-3.5">{r.especialistaObj.especialidad}</p>
+        )}
         <div className="flex items-center gap-1 mt-0.5 text-xs opacity-70">
           <MapPin size={10} />
           <span>{q?.numero} – {q?.ubicacion}</span>
@@ -69,8 +74,14 @@ function PlanCard({ plan, casos, resolveCaso, getQuirofanoById, qColorLight }) {
   );
 }
 
+const ESTADOS_JEFE = ['programada', 'en_admision', 'en_curso'];
+
 export default function PlanesPage() {
+  const { user } = useAuth();
   const { casos, planes, quirofanos, resolveCaso, getQuirofanoById } = useData();
+  const esJefe = user?.rol === 'especialista' && user?.esJefeServicio;
+  const casoHref = esJefe ? (id) => `/planes/caso/${id}` : (id) => `/casos/${id}`;
+  const router = useRouter();
   const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
   const hoy = localToday();
   const [fechaActual, setFechaActual] = useState(localToday);
@@ -90,10 +101,14 @@ export default function PlanesPage() {
 
   const diasSemana = Array.from({ length: 7 }, (_, i) => addDays(semanaInicio, i));
 
-  const planesDelDia = planes.filter(p => p.fecha === fechaActual);
+  const planesVisibles = esJefe
+    ? planes.filter(p => { const c = casos.find(x => x._id === p.caso); return c && ESTADOS_JEFE.includes(c.estado); })
+    : planes;
+
+  const planesDelDia = planesVisibles.filter(p => p.fecha === fechaActual);
   const planesSemana = diasSemana.map(dia => ({
     dia,
-    planes: planes.filter(p => p.fecha === dia),
+    planes: planesVisibles.filter(p => p.fecha === dia),
   }));
 
   const prevSemana = () => setFechaActual(addDays(semanaInicio, -7));
@@ -122,11 +137,13 @@ export default function PlanesPage() {
               <Printer size={14} />
               <span className="hidden sm:inline">Imprimir / PDF</span>
             </button>
-            <button className="btn-primary text-xs sm:text-sm" onClick={() => setMostrarModal(true)}>
-              <Plus size={14} />
-              <span className="hidden sm:inline">Programar Caso</span>
-              <span className="sm:hidden">Programar</span>
-            </button>
+            {!esJefe && (
+              <button className="btn-primary text-xs sm:text-sm" onClick={() => setMostrarModal(true)}>
+                <Plus size={14} />
+                <span className="hidden sm:inline">Programar Caso</span>
+                <span className="sm:hidden">Programar</span>
+              </button>
+            )}
           </div>
         }
       />
@@ -236,7 +253,7 @@ export default function PlanesPage() {
                       ) : (
                         planesQ
                           .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
-                          .map(p => <PlanCard key={p._id} plan={p} casos={casos} resolveCaso={resolveCaso} getQuirofanoById={getQuirofanoById} qColorLight={qColorLightMap[p.quirofano]} />)
+                          .map(p => <PlanCard key={p._id} plan={p} casos={casos} resolveCaso={resolveCaso} getQuirofanoById={getQuirofanoById} qColorLight={qColorLightMap[p.quirofano]} casoHref={casoHref} />)
                       )}
                     </div>
                   </div>
@@ -248,9 +265,11 @@ export default function PlanesPage() {
               <div className="card p-12 text-center">
                 <Calendar size={36} className="text-slate-200 mx-auto mb-3" />
                 <p className="text-slate-400">No hay cirugías programadas para esta fecha.</p>
-                <button className="btn-primary mt-4 mx-auto">
-                  <Plus size={15} /> Programar Caso
-                </button>
+                {!esJefe && (
+                  <button className="btn-primary mt-4 mx-auto" onClick={() => setMostrarModal(true)}>
+                    <Plus size={15} /> Programar Caso
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -282,7 +301,7 @@ export default function PlanesPage() {
                       const r = caso ? resolveCaso(caso) : null;
                       const q = getQuirofanoById(plan.quirofano);
                       return (
-                        <tr key={plan._id} className="hover:bg-slate-50">
+                        <tr key={plan._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => router.push(casoHref(plan.caso))}>
                           <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs font-bold text-blue-700 whitespace-nowrap">
                             {plan.horaInicio}–{plan.horaFinEstimada}
                           </td>
@@ -294,7 +313,10 @@ export default function PlanesPage() {
                           </td>
                           <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-slate-800 truncate max-w-[90px] sm:max-w-none">{r?.pacienteObj?.nombre}</td>
                           <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs text-slate-600 truncate max-w-[120px] hidden sm:table-cell">{caso?.procedimientoNombre || r?.procedimientoObj?.nombre}</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs text-slate-600 hidden md:table-cell">{r?.especialistaObj?.nombre}</td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 hidden md:table-cell">
+                            <p className="text-xs text-slate-700 font-medium">{r?.especialistaObj?.nombre}</p>
+                            {r?.especialistaObj?.especialidad && <p className="text-[10px] text-slate-400">{r.especialistaObj.especialidad}</p>}
+                          </td>
                           <td className="px-2 sm:px-4 py-2 sm:py-3"><EstadoBadge estado={caso?.estado} /></td>
                         </tr>
                       );

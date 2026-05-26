@@ -109,7 +109,7 @@ export default function CatalogPage({ title, backHref = '/configuracion', icon: 
                       </td>
                     ))}
                     <td className="table-cell text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => handleEdit(item)}
                           className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors"

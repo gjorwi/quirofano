@@ -204,7 +204,7 @@ export default function DashboardPage() {
                         {resuelto?.pacienteObj?.nombre || 'Paciente'}
                       </p>
                       <p className="text-xs text-slate-500 truncate">
-                        {resuelto?.procedimientoObj?.nombre} · {q?.numero}
+                        {caso?.procedimientoNombre || resuelto?.procedimientoObj?.nombre} · {q?.numero}
                       </p>
                     </div>
                     <EstadoBadge estado={caso?.estado} />

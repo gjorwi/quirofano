@@ -23,7 +23,9 @@ export default function CasoSelectorModal({ onSelect, onClose }) {
         return (
           r.pacienteObj?.nombre?.toLowerCase().includes(texto) ||
           r.especialistaObj?.nombre?.toLowerCase().includes(texto) ||
+          c.procedimientoNombre?.toLowerCase().includes(texto) ||
           r.procedimientoObj?.nombre?.toLowerCase().includes(texto) ||
+          c.diagnosticoNombre?.toLowerCase().includes(texto) ||
           r.diagnosticoObj?.nombre?.toLowerCase().includes(texto)
         );
       })
@@ -119,11 +121,11 @@ export default function CasoSelectorModal({ onSelect, onClose }) {
                       <TipoBadge tipo={c.tipo} />
                       <PrioridadBadge prioridad={c.prioridad} />
                     </div>
-                    <p className="text-xs text-slate-600 truncate">{r.procedimientoObj?.nombre || '—'}</p>
+                    <p className="text-xs text-slate-600 truncate">{c.procedimientoNombre || r.procedimientoObj?.nombre || '—'}</p>
                     <div className="flex flex-wrap gap-x-3 mt-1 text-xs text-slate-400">
                       <span>{r.especialistaObj?.nombre}</span>
                       {c.duracionEstimadaMin && <span>· {c.duracionEstimadaMin} min</span>}
-                      {r.diagnosticoObj?.codigo && <span>· {r.diagnosticoObj.codigo}</span>}
+                      {(c.diagnosticoNombre || r.diagnosticoObj?.codigo) && <span>· {c.diagnosticoNombre || r.diagnosticoObj?.codigo}</span>}
                     </div>
                     {c.tipo === 'emergencia' && c.motivoEmergencia && (
                       <div className="flex items-center gap-1 mt-1.5 text-xs text-red-600">

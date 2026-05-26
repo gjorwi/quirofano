@@ -130,8 +130,8 @@ function CasosContent() {
                       <td className="table-cell"><TipoBadge tipo={c.tipo} /></td>
                       <td className="table-cell"><PrioridadBadge prioridad={c.prioridad} /></td>
                       <td className="table-cell">
-                        <p className="text-slate-700">{r.procedimientoObj?.nombre || '—'}</p>
-                        <p className="text-xs text-slate-400">{r.diagnosticoObj?.codigo} · {r.diagnosticoObj?.nombre?.substring(0, 30)}</p>
+                        <p className="text-slate-700">{c.procedimientoNombre || r.procedimientoObj?.nombre || '—'}</p>
+                        <p className="text-xs text-slate-400">{c.diagnosticoNombre || (r.diagnosticoObj ? `${r.diagnosticoObj.codigo ? r.diagnosticoObj.codigo + ' · ' : ''}${r.diagnosticoObj.nombre?.substring(0, 30)}` : '')}</p>
                       </td>
                       <td className="table-cell text-slate-600">{r.especialistaObj?.nombre}</td>
                       <td className="table-cell"><EstadoBadge estado={c.estado} /></td>
@@ -139,7 +139,7 @@ function CasosContent() {
                         {new Date(c.createdAt).toLocaleDateString('es-HN')}
                       </td>
                       <td className="table-cell text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/casos/${c._id}`}
                             className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors"

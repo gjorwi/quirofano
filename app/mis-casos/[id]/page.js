@@ -52,7 +52,7 @@ export default function MiCasoDetallePage() {
   return (
     <div className="page-enter">
       <Header
-        title={r.procedimientoObj?.nombre || 'Detalle del Caso'}
+        title={caso.procedimientoNombre || r.procedimientoObj?.nombre || 'Detalle del Caso'}
         subtitle={r.pacienteObj?.nombre}
         actions={
           <Link href="/mis-casos" className="btn-secondary">
@@ -239,8 +239,8 @@ export default function MiCasoDetallePage() {
           {/* Procedimiento */}
           <div className="card p-5 space-y-3">
             <h2 className="section-title flex items-center gap-2"><FileText size={16} className="text-blue-500" /> Procedimiento</h2>
-            <InfoRow label="Diagnóstico" value={`${r.diagnosticoObj?.codigo} – ${r.diagnosticoObj?.nombre}`} />
-            <InfoRow label="Procedimiento" value={r.procedimientoObj?.nombre} />
+            <InfoRow label="Diagnóstico" value={caso.diagnosticoNombre || (r.diagnosticoObj ? `${r.diagnosticoObj.codigo ? r.diagnosticoObj.codigo + ' – ' : ''}${r.diagnosticoObj.nombre}` : '—')} />
+            <InfoRow label="Procedimiento" value={caso.procedimientoNombre || r.procedimientoObj?.nombre || '—'} />
             <InfoRow label="Duración Estimada" value={caso.duracionEstimadaMin ? `${caso.duracionEstimadaMin} min` : '—'} />
             {caso.observaciones && <InfoRow label="Observaciones" value={caso.observaciones} />}
           </div>

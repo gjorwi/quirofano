@@ -39,7 +39,10 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navItems = NAV_BY_ROLE[user?.rol] || [];
+  const baseNav = NAV_BY_ROLE[user?.rol] || [];
+  const navItems = user?.rol === 'especialista' && user?.esJefeServicio
+    ? [...baseNav, { href: '/planes', label: 'Plan Quirúrgico', icon: CalendarDays }]
+    : baseNav;
   const RolIcon = ROL_ICON[user?.rol] || User;
   const rolLabel = ROL_LABELS[user?.rol] || '';
   const rolBadge = ROL_COLORS[user?.rol] || 'bg-slate-100 text-slate-600';

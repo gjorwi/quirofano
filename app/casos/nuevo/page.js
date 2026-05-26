@@ -17,8 +17,6 @@ export default function NuevoCasoPage() {
     especialistaPrincipal: '',
     equipoQuirurgico: [],
     asistentesExternos: [],
-    diagnostico: '',
-    procedimiento: '',
     diagnosticoNombre: '',
     procedimientoNombre: '',
     duracionEstimadaMin: '',

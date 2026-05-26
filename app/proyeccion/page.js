@@ -236,12 +236,12 @@ export default function ProyeccionQuirurgicaPage() {
                         {/* Procedimiento */}
                         <div>
                           <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Procedimiento</p>
-                          <p className="text-sm text-slate-700 line-clamp-1">{caso.resuelto.procedimientoObj?.nombre}</p>
+                          <p className="text-sm text-slate-700 line-clamp-1">{caso.procedimientoNombre || caso.resuelto.procedimientoObj?.nombre || '—'}</p>
                         </div>
                         <div>
                           <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Diagnóstico</p>
                           <p className="text-sm text-slate-700 line-clamp-1">
-                            {caso.resuelto.diagnosticoObj?.codigo} - {caso.resuelto.diagnosticoObj?.nombre}
+                            {caso.diagnosticoNombre || (caso.resuelto.diagnosticoObj ? `${caso.resuelto.diagnosticoObj.codigo ? caso.resuelto.diagnosticoObj.codigo + ' - ' : ''}${caso.resuelto.diagnosticoObj.nombre}` : '—')}
                           </p>
                         </div>
                         <div>

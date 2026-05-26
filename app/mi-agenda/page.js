@@ -117,7 +117,7 @@ export default function MiAgendaPage() {
                         <div className="rounded border border-purple-200 bg-purple-50 px-2 py-1.5 mb-1 text-xs hover:bg-purple-100 transition-colors">
                           <p className="font-bold text-purple-700">{plan.horaInicio}</p>
                           <p className="truncate text-purple-800">{r?.pacienteObj?.nombre?.split(' ')[0]}</p>
-                          <p className="truncate text-purple-600 opacity-75">{r?.procedimientoObj?.nombre?.substring(0, 18)}</p>
+                          <p className="truncate text-purple-600 opacity-75">{(c?.procedimientoNombre || r?.procedimientoObj?.nombre)?.substring(0, 18)}</p>
                         </div>
                       </Link>
                     );
@@ -166,7 +166,7 @@ export default function MiAgendaPage() {
                               : <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">Asistente</span>
                             }
                           </div>
-                          <p className="text-sm text-slate-500">{r?.procedimientoObj?.nombre}</p>
+                          <p className="text-sm text-slate-500">{c?.procedimientoNombre || r?.procedimientoObj?.nombre}</p>
                           <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
                             <span className="flex items-center gap-1"><Clock size={11} /> {plan.horaInicio}–{plan.horaFinEstimada}</span>
                             <span className="flex items-center gap-1"><MapPin size={11} /> {q?.numero} – {q?.ubicacion}</span>

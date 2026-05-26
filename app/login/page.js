@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AppProvider';
 import { Cross, Eye, EyeOff, LogIn } from 'lucide-react';
+import { api } from '@/lib/apiClient';
 import { ROLES, ROL_LABELS, DEFAULT_ROUTE } from '@/lib/auth';
 
 const DEMO_USERS = [
@@ -19,6 +20,11 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hideDemoLogin, setHideDemoLogin] = useState(false);
+
+  useEffect(() => {
+    api.getSettings().then(s => { if (s?.hideDemoLogin) setHideDemoLogin(true); }).catch(() => {});
+  }, []);
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -112,6 +118,7 @@ export default function LoginPage() {
           </form>
 
           {/* Demo credentials */}
+          {!hideDemoLogin && (
           <div className="mt-6 pt-5 border-t border-slate-100">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Accesos de demostración</p>
             <div className="space-y-2">
@@ -145,6 +152,7 @@ export default function LoginPage() {
               })}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
