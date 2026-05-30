@@ -78,8 +78,9 @@ const ESTADOS_JEFE = ['programada', 'en_admision', 'en_curso'];
 
 export default function PlanesPage() {
   const { user } = useAuth();
-  const { casos, planes, quirofanos, resolveCaso, getQuirofanoById } = useData();
+  const { casos, planes, quirofanos, resolveCaso, getQuirofanoById, especialistas } = useData();
   const esJefe = user?.rol === 'especialista' && user?.esJefeServicio;
+  const miEspecialista = esJefe ? especialistas.find(e => e._id === user?.especialistaId) : null;
   const casoHref = esJefe ? (id) => `/planes/caso/${id}` : (id) => `/casos/${id}`;
   const router = useRouter();
   const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -101,8 +102,13 @@ export default function PlanesPage() {
 
   const diasSemana = Array.from({ length: 7 }, (_, i) => addDays(semanaInicio, i));
 
-  const planesVisibles = esJefe
-    ? planes.filter(p => { const c = casos.find(x => x._id === p.caso); return c && ESTADOS_JEFE.includes(c.estado); })
+  const planesVisibles = esJefe && miEspecialista
+    ? planes.filter(p => {
+        const c = casos.find(x => x._id === p.caso);
+        if (!c || !ESTADOS_JEFE.includes(c.estado)) return false;
+        const r = resolveCaso(c);
+        return r.especialistaObj?.especialidad === miEspecialista.especialidad;
+      })
     : planes;
 
   const planesDelDia = planesVisibles.filter(p => p.fecha === fechaActual);

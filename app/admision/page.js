@@ -93,11 +93,25 @@ function AdmisionForm({ caso, onClose }) {
           {/* Info paciente */}
           <div className="bg-slate-50 rounded-xl p-4 space-y-1.5">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Datos del Paciente</p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+              <div><span className="text-slate-500 text-xs">Nombre:</span> <span className="font-medium text-slate-800">{r.pacienteObj?.nombre || '—'}</span></div>
               <div><span className="text-slate-500 text-xs">Identificación:</span> <span className="font-medium text-slate-800">{r.pacienteObj?.identificacion || '—'}</span></div>
+              <div><span className="text-slate-500 text-xs">Email:</span> <span className="font-medium text-slate-800">{r.pacienteObj?.email || '—'}</span></div>
               <div><span className="text-slate-500 text-xs">Sexo:</span> <span className="font-medium text-slate-800 capitalize">{r.pacienteObj?.sexo || '—'}</span></div>
               <div><span className="text-slate-500 text-xs">F. Nacimiento:</span> <span className="font-medium text-slate-800">{r.pacienteObj?.fechaNacimiento ? new Date(r.pacienteObj.fechaNacimiento + 'T12:00:00').toLocaleDateString('es-HN') : '—'}</span></div>
               <div><span className="text-slate-500 text-xs">Contacto:</span> <span className="font-medium text-slate-800">{r.pacienteObj?.contacto || '—'}</span></div>
+              <div><span className="text-slate-500 text-xs">HC:</span> <span className="font-medium text-slate-800">{r.pacienteObj?.historiaClinica || '—'}</span></div>
+            </div>
+          </div>
+
+          {/* Procedimiento */}
+          <div className="bg-blue-50 rounded-xl p-4 space-y-1.5">
+            <p className="text-xs font-semibold text-blue-500 uppercase tracking-wide mb-2">Procedimiento Quirúrgico</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              <div><span className="text-slate-500 text-xs">Procedimiento:</span> <span className="font-medium text-slate-800">{caso.procedimientoNombre || r.procedimientoObj?.nombre || '—'}</span></div>
+              <div><span className="text-slate-500 text-xs">Diagnóstico:</span> <span className="font-medium text-slate-800">{caso.diagnosticoNombre || (r.diagnosticoObj ? `${r.diagnosticoObj.codigo ? r.diagnosticoObj.codigo + ' – ' : ''}${r.diagnosticoObj.nombre}` : '—')}</span></div>
+              <div><span className="text-slate-500 text-xs">Especialista:</span> <span className="font-medium text-slate-800">{r.especialistaObj?.nombre || '—'}</span></div>
+              <div><span className="text-slate-500 text-xs">Duración Est.:</span> <span className="font-medium text-slate-800">{caso.duracionEstimadaMin ? `${caso.duracionEstimadaMin} min` : '—'}</span></div>
             </div>
           </div>
 

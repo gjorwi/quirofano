@@ -3,8 +3,10 @@ import { useState, useMemo } from 'react';
 import Header from '@/components/Header';
 import { EstadoBadge, TipoBadge } from '@/components/StatusBadge';
 import { useData } from '@/components/AppProvider';
-import { 
-  Users, Stethoscope, CheckCircle, XCircle, Clock, 
+import { showToast } from '@/components/ToastMessage';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import {
+  Users, Stethoscope, CheckCircle, XCircle, Clock,
   ChevronRight, AlertCircle, Calendar, CheckCheck
 } from 'lucide-react';
 
@@ -12,6 +14,7 @@ export default function ProyeccionQuirurgicaPage() {
   const { casos, actualizarCaso, resolveCaso } = useData();
   const [especialistaSeleccionado, setEspecialistaSeleccionado] = useState(null);
   const [procesando, setProcesando] = useState(false);
+  const [confirmAprobar, setConfirmAprobar] = useState(null);
 
   // Agrupar casos pendientes por especialista
   const casosPorEspecialista = useMemo(() => {
@@ -55,26 +58,40 @@ export default function ProyeccionQuirurgicaPage() {
 
   const handleAprobar = async (casoId) => {
     setProcesando(true);
-    await actualizarCaso(casoId, { estado: 'aprobada' });
+    try {
+      await actualizarCaso(casoId, { estado: 'aprobada' });
+      showToast('Caso aprobado exitosamente.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
     setProcesando(false);
   };
 
   const handleRechazar = async (casoId) => {
     setProcesando(true);
-    await actualizarCaso(casoId, { estado: 'rechazada' });
+    try {
+      await actualizarCaso(casoId, { estado: 'rechazada' });
+      showToast('Caso rechazado.', 'warning');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
     setProcesando(false);
   };
 
   const handleAprobarTodos = async () => {
-    if (!confirm(`¿Aprobar todos los ${casosDelEspecialista.length} casos de este especialista?`)) {
-      return;
-    }
-    setProcesando(true);
-    for (const caso of casosDelEspecialista) {
-      await actualizarCaso(caso._id, { estado: 'aprobada' });
-    }
-    setProcesando(false);
-    setEspecialistaSeleccionado(null);
+    setConfirmAprobar({
+      count: casosDelEspecialista.length,
+      onConfirm: async () => {
+        setConfirmAprobar(null);
+        setProcesando(true);
+        for (const caso of casosDelEspecialista) {
+          await actualizarCaso(caso._id, { estado: 'aprobada' });
+        }
+        setProcesando(false);
+        setEspecialistaSeleccionado(null);
+        showToast(`${casosDelEspecialista.length} casos aprobados exitosamente.`, 'success');
+      }
+    });
   };
 
   return (
@@ -206,7 +223,7 @@ export default function ProyeccionQuirurgicaPage() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         {/* Paciente */}
-                        <div className="sm:col-span-2 bg-slate-50 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="sm:col-span-2 bg-slate-50 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-5 gap-2">
                           <div>
                             <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">Paciente</p>
                             <p className="text-sm font-semibold text-slate-900">{caso.resuelto.pacienteObj?.nombre}</p>
@@ -226,8 +243,12 @@ export default function ProyeccionQuirurgicaPage() {
                             <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">Contacto</p>
                             <p className="text-sm text-slate-700">{caso.resuelto.pacienteObj?.contacto || '—'}</p>
                           </div>
+                          <div>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">Email</p>
+                            <p className="text-sm text-slate-700">{caso.resuelto.pacienteObj?.email || '—'}</p>
+                          </div>
                           {caso.resuelto.pacienteObj?.alergias && (
-                            <div className="sm:col-span-4">
+                            <div className="sm:col-span-5">
                               <p className="text-[10px] font-semibold text-red-500 uppercase mb-0.5">⚠ Alergias</p>
                               <p className="text-sm text-red-700 font-medium">{caso.resuelto.pacienteObj.alergias}</p>
                             </div>
@@ -286,6 +307,16 @@ export default function ProyeccionQuirurgicaPage() {
           </>
         )}
       </div>
+
+      {confirmAprobar && (
+        <ConfirmDialog
+          title="Aprobar Casos"
+          message={`¿Aprobar los ${confirmAprobar.count} casos seleccionados de este especialista?`}
+          confirmLabel="Aprobar Todos"
+          onConfirm={confirmAprobar.onConfirm}
+          onCancel={() => setConfirmAprobar(null)}
+        />
+      )}
     </div>
   );
 }

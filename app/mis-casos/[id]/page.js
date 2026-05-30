@@ -234,6 +234,7 @@ export default function MiCasoDetallePage() {
             <InfoRow label="Sexo" value={r.pacienteObj?.sexo} />
             <InfoRow label="Contacto" value={r.pacienteObj?.contacto} />
             <InfoRow label="Historia Clínica" value={r.pacienteObj?.historiaClinica} />
+            <InfoRow label="Email" value={r.pacienteObj?.email} />
           </div>
 
           {/* Procedimiento */}
@@ -271,6 +272,7 @@ export default function MiCasoDetallePage() {
                 <ClipboardList size={16} className="text-orange-500" /> Admisión Registrada
               </h2>
               <InfoRow label="Responsable" value={admision.responsable} />
+              <InfoRow label="Ingresado Por" value={admision.ingresadoPor} />
               <InfoRow label="Fecha/Hora Ingreso" value={admision.fechaHoraIngreso ? new Date(admision.fechaHoraIngreso).toLocaleString('es-HN') : '—'} />
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {[['P.A.', admision.signosVitales?.presionArterial],

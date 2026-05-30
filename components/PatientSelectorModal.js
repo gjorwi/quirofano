@@ -1,15 +1,18 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useData } from '@/components/AppProvider';
+import { api } from '@/lib/apiClient';
 import { X, Search, Plus, User, Check } from 'lucide-react';
 
 export default function PatientSelectorModal({ onSelect, onClose }) {
-  const { pacientes } = useData();
+  const { pacientes, crearPaciente } = useData();
   const [busqueda, setBusqueda] = useState('');
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [creandoPaciente, setCreandoPaciente] = useState(false);
   const [nuevoForm, setNuevoForm] = useState({
     nombre: '',
     identificacion: '',
+    email: '',
     fechaNacimiento: '',
     sexo: 'M',
     contacto: '',
@@ -31,14 +34,18 @@ export default function PatientSelectorModal({ onSelect, onClose }) {
     onClose();
   };
 
-  const handleCrearPaciente = () => {
-    const nuevo = {
-      _id: `p${Date.now()}`,
-      ...nuevoForm,
-    };
-    pacientes.push(nuevo);
-    onSelect(nuevo);
-    onClose();
+  const handleCrearPaciente = async () => {
+    if (!nuevoForm.email.trim() || !nuevoForm.historiaClinica.trim() || !nuevoForm.identificacion.trim() || !nuevoForm.nombre.trim()) {
+      return;
+    }
+    setCreandoPaciente(true);
+    try {
+      const nuevo = await crearPaciente({ ...nuevoForm });
+      onSelect(nuevo);
+      onClose();
+    } finally {
+      setCreandoPaciente(false);
+    }
   };
 
   const set = (k, v) => setNuevoForm(f => ({ ...f, [k]: v }));
@@ -80,6 +87,17 @@ export default function PatientSelectorModal({ onSelect, onClose }) {
                 />
               </div>
               <div>
+                <label className="label">Correo Electrónico *</label>
+                <input
+                  type="email"
+                  className="input-field"
+                  value={nuevoForm.email}
+                  onChange={e => set('email', e.target.value)}
+                  placeholder="Ej. correo@ejemplo.com"
+                  required
+                />
+              </div>
+              <div>
                 <label className="label">Fecha de Nacimiento</label>
                 <input
                   type="date"
@@ -114,12 +132,13 @@ export default function PatientSelectorModal({ onSelect, onClose }) {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="label">Historia Clínica (opcional)</label>
+                <label className="label">Historia Clínica *</label>
                 <input
                   className="input-field"
                   value={nuevoForm.historiaClinica}
                   onChange={e => set('historiaClinica', e.target.value)}
                   placeholder="Ej. HC-2024-001234"
+                  required
                 />
               </div>
             </div>
@@ -128,8 +147,8 @@ export default function PatientSelectorModal({ onSelect, onClose }) {
               <button type="button" onClick={() => setMostrarForm(false)} className="btn-secondary w-full sm:w-auto">
                 Cancelar
               </button>
-              <button type="submit" className="btn-primary w-full sm:w-auto">
-                <Check size={15} /> Registrar y Seleccionar
+              <button type="submit" disabled={creandoPaciente} className="btn-primary w-full sm:w-auto">
+                <Check size={15} /> {creandoPaciente ? 'Registrando...' : 'Registrar y Seleccionar'}
               </button>
             </div>
           </form>

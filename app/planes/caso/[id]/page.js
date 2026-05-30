@@ -119,6 +119,7 @@ export default function PlanCasoDetallePage() {
                 ? new Date(r.pacienteObj.fechaNacimiento + 'T12:00:00').toLocaleDateString('es-HN') : '—'} />
               <InfoRow label="Sexo"            value={r.pacienteObj?.sexo} />
               <InfoRow label="Historia Clín."  value={r.pacienteObj?.historiaClinica} />
+              <InfoRow label="Email"           value={r.pacienteObj?.email} />
               {r.pacienteObj?.alergias && (
                 <div className="flex gap-2">
                   <span className="text-xs font-semibold text-red-500 uppercase tracking-wide w-36 flex-shrink-0 pt-0.5">⚠ Alergias</span>

@@ -1,6 +1,7 @@
 import './globals.css';
 import AppProvider from '@/components/AppProvider';
 import AppShell from '@/components/AppShell';
+import ToastProvider from '@/components/ToastMessage';
 
 export const metadata = {
   title: 'SICAQ – Sistema de Control y Administración Quirúrgica',
@@ -13,9 +14,11 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body>
         <AppProvider>
-          <AppShell>
-            {children}
-          </AppShell>
+          <ToastProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+          </ToastProvider>
         </AppProvider>
       </body>
     </html>

@@ -20,10 +20,10 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [hideDemoLogin, setHideDemoLogin] = useState(false);
+  const [hideDemoLogin, setHideDemoLogin] = useState(null);
 
   useEffect(() => {
-    api.getSettings().then(s => { if (s?.hideDemoLogin) setHideDemoLogin(true); }).catch(() => {});
+    api.getSettings().then(s => setHideDemoLogin(!!s?.hideDemoLogin)).catch(() => setHideDemoLogin(false));
   }, []);
 
   const handleSubmit = async e => {
@@ -118,7 +118,7 @@ export default function LoginPage() {
           </form>
 
           {/* Demo credentials */}
-          {!hideDemoLogin && (
+          {hideDemoLogin === false && (
           <div className="mt-6 pt-5 border-t border-slate-100">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Accesos de demostración</p>
             <div className="space-y-2">

@@ -108,15 +108,21 @@ function DataProvider({ children, currentUser }) {
   }, [currentUser]);
 
   // Helper: resuelve referencias de un caso usando datos en contexto
-  const resolveCaso = useCallback((caso) => ({
-    ...caso,
-    pacienteObj:       pacientes.find(p => p._id === caso.paciente),
-    especialistaObj:   especialistas.find(e => e._id === caso.especialistaPrincipal),
-    equipoObjs:        (caso.equipoQuirurgico || []).map(id => especialistas.find(e => e._id === id)).filter(Boolean),
-    diagnosticoObj:    diagnosticos.find(d => d._id === caso.diagnostico),
-    procedimientoObj:  procedimientos.find(p => p._id === caso.procedimiento),
-    planObj:           planes.find(p => p._id === caso.plan),
-  }), [pacientes, especialistas, diagnosticos, procedimientos, planes]);
+  const resolveCaso = useCallback((caso) => {
+    const result = {
+      ...caso,
+      pacienteObj:       pacientes.find(p => String(p._id) === String(caso.paciente)),
+      especialistaObj:   especialistas.find(e => e._id === caso.especialistaPrincipal),
+      equipoObjs:        (caso.equipoQuirurgico || []).map(id => especialistas.find(e => e._id === id)).filter(Boolean),
+      diagnosticoObj:    diagnosticos.find(d => d._id === caso.diagnostico),
+      procedimientoObj:  procedimientos.find(p => p._id === caso.procedimiento),
+      planObj:           planes.find(p => p._id === caso.plan),
+    };
+    if (!result.pacienteObj) {
+      console.log('resolveCaso - paciente no encontrado:', { pacienteId: caso.paciente, pacientesIds: pacientes.map(p => String(p._id)) });
+    }
+    return result;
+  }, [pacientes, especialistas, diagnosticos, procedimientos, planes]);
 
   const getQuirofanoById = useCallback((id) => quirofanos.find(q => q._id === id), [quirofanos]);
 
@@ -137,6 +143,10 @@ function DataProvider({ children, currentUser }) {
   const aprobarCaso  = useCallback((id) => actualizarCaso(id, { estado: 'aprobada' }),  [actualizarCaso]);
   const rechazarCaso = useCallback((id) => actualizarCaso(id, { estado: 'rechazada' }), [actualizarCaso]);
   const cancelarCaso = useCallback((id) => actualizarCaso(id, { estado: 'cancelado' }), [actualizarCaso]);
+  const eliminarCaso = useCallback(async (id) => {
+    await api.eliminarCaso(id);
+    setCasos(prev => prev.filter(c => c._id !== id));
+  }, []);
 
   // ── Planes ───────────────────────────────────────────────────────────────
   const crearPlan = useCallback(async (data) => {
@@ -175,7 +185,11 @@ function DataProvider({ children, currentUser }) {
   // ── Pacientes ─────────────────────────────────────────────────────────────
   const crearPaciente = useCallback(async (data) => {
     const nuevo = await api.crearPaciente(data);
-    setPacientes(prev => [...prev, nuevo]);
+    console.log('crearPaciente - nuevo paciente:', JSON.stringify(nuevo));
+    setPacientes(prev => {
+      console.log('setPacientes - prev length:', prev.length, ' adding:', nuevo._id);
+      return [...prev, nuevo];
+    });
     return nuevo;
   }, []);
   const actualizarPaciente = useCallback(async (id, data) => {
@@ -286,13 +300,17 @@ function DataProvider({ children, currentUser }) {
     setUsuarios(prev => prev.map(u => u._id === id ? actualizado : u));
   }, []);
 
+  const cambiarPassword = useCallback(async (id, data) => {
+    return await api.cambiarPassword(id, data);
+  }, []);
+
   return (
     <DataContext.Provider value={{
       casos, planes, admisiones, usuarios,
       pacientes, especialistas, quirofanos, procedimientos, diagnosticos, insumos,
       dataLoading,
       resolveCaso, getQuirofanoById,
-      crearCaso, actualizarCaso, actualizarEstadoCaso, aprobarCaso, rechazarCaso, cancelarCaso,
+      crearCaso, actualizarCaso, actualizarEstadoCaso, aprobarCaso, rechazarCaso, cancelarCaso, eliminarCaso,
       crearPlan, actualizarPlan, eliminarPlan,
       crearAdmision, actualizarAdmision,
       crearPaciente, actualizarPaciente, eliminarPaciente,
@@ -301,7 +319,7 @@ function DataProvider({ children, currentUser }) {
       crearProcedimiento, actualizarProcedimiento, eliminarProcedimiento,
       crearDiagnostico, actualizarDiagnostico, eliminarDiagnostico,
       crearInsumo, actualizarInsumo, eliminarInsumo,
-      crearUsuario, actualizarUsuario, toggleUsuario,
+      crearUsuario, actualizarUsuario, toggleUsuario, cambiarPassword,
     }}>
       {children}
     </DataContext.Provider>

@@ -5,7 +5,10 @@ import Header from '@/components/Header';
 import { EstadoBadge, PrioridadBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/components/AppProvider';
 import { useData } from '@/components/AppProvider';
-import { Plus, Eye, Clock, CheckCircle, XCircle, CalendarDays, ClipboardList } from 'lucide-react';
+import { Plus, Eye, Clock, CheckCircle, XCircle, CalendarDays, ClipboardList, Pencil, Trash2 } from 'lucide-react';
+import ProponerCasoModal from '@/components/ProponerCasoModal';
+import { showToast } from '@/components/ToastMessage';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const ESTADO_TABS = [
   { key: '',           label: 'Todos' },
@@ -20,8 +23,12 @@ const ESTADO_TABS = [
 
 export default function MisCasosPage() {
   const { user } = useAuth();
-  const { casos, resolveCaso, getQuirofanoById } = useData();
+  const { casos, resolveCaso, getQuirofanoById, eliminarCaso } = useData();
   const [tabEstado, setTabEstado] = useState('');
+  const [eliminandoId, setEliminandoId] = useState(null);
+  const [modalCaso, setModalCaso] = useState(null);
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const misCasos = useMemo(() =>
     casos
@@ -124,69 +131,121 @@ export default function MisCasosPage() {
 
           {misCasos.map(c => {
             const r = resolveCaso(c);
+            const esPendiente = c.estado === 'pendiente';
             return (
-              <Link key={c._id} href={`/mis-casos/${c._id}`}>
-                <div className="card p-5 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <EstadoBadge estado={c.estado} />
-                        <PrioridadBadge prioridad={c.prioridad} />
-                        {c.tipo === 'emergencia' && (
-                          <span className="text-xs font-bold text-red-600">⚡ Emergencia</span>
-                        )}
-                      </div>
-                      <p className="font-semibold text-slate-800 text-base">{r.pacienteObj?.nombre}</p>
-                      <p className="text-sm text-slate-500 mt-0.5">{c.procedimientoNombre || r.procedimientoObj?.nombre || '—'}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {c.diagnosticoNombre || (r.diagnosticoObj ? `${r.diagnosticoObj.codigo ? r.diagnosticoObj.codigo + ' · ' : ''}${r.diagnosticoObj.nombre}` : '')}
-                      </p>
+              <div key={c._id} className="card p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <EstadoBadge estado={c.estado} />
+                      <PrioridadBadge prioridad={c.prioridad} />
+                      {c.tipo === 'emergencia' && (
+                        <span className="text-xs font-bold text-red-600">⚡ Emergencia</span>
+                      )}
                     </div>
-
-                    <div className="text-right flex-shrink-0 space-y-2">
-                      {/* Estado visual */}
-                      {c.estado === 'pendiente' && (
-                        <div className="flex items-center gap-1.5 text-yellow-600 text-xs">
-                          <Clock size={13} /> Esperando aprobación
-                        </div>
-                      )}
-                      {c.estado === 'aprobada' && (
-                        <div className="flex items-center gap-1.5 text-blue-600 text-xs">
-                          <CheckCircle size={13} /> Aprobado, sin programar
-                        </div>
-                      )}
-                      {c.estado === 'rechazada' && (
-                        <div className="flex items-center gap-1.5 text-red-600 text-xs">
-                          <XCircle size={13} /> Rechazado
-                        </div>
-                      )}
-                      {c.estado === 'programada' && r.planObj && (
-                        <div className="text-right">
-                          <p className="text-xs font-bold text-purple-600">
-                            {new Date(r.planObj.fecha + 'T12:00:00').toLocaleDateString('es-HN', { day:'numeric', month:'short', year:'numeric' })}
-                          </p>
-                          <p className="text-xs text-slate-500">{r.planObj.horaInicio} – {r.planObj.horaFinEstimada}</p>
-                        </div>
-                      )}
-                      <p className="text-xs text-slate-400">
-                        {new Date(c.createdAt).toLocaleDateString('es-HN')}
-                      </p>
-                    </div>
+                    <p className="font-semibold text-slate-800 text-base">{r.pacienteObj?.nombre}</p>
+                    <p className="text-sm text-slate-500 mt-0.5">{c.procedimientoNombre || r.procedimientoObj?.nombre || '—'}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {c.diagnosticoNombre || (r.diagnosticoObj ? `${r.diagnosticoObj.codigo ? r.diagnosticoObj.codigo + ' · ' : ''}${r.diagnosticoObj.nombre}` : '')}
+                    </p>
                   </div>
 
-                  {/* Plan info si está programado */}
-                  {c.estado === 'programada' && r.planObj && (
-                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-4 text-xs text-slate-600">
-                      <span className="flex items-center gap-1"><CalendarDays size={12} /> Programado</span>
-                      <span>Quirófano: {r.planObj ? (getQuirofanoById(r.planObj.quirofano)?.numero || '—') : ''}</span>
-                    </div>
+                  <div className="text-right flex-shrink-0 space-y-2">
+                    {/* Estado visual */}
+                    {c.estado === 'pendiente' && (
+                      <div className="flex items-center gap-1.5 text-yellow-600 text-xs">
+                        <Clock size={13} /> Esperando aprobación
+                      </div>
+                    )}
+                    {c.estado === 'aprobada' && (
+                      <div className="flex items-center gap-1.5 text-blue-600 text-xs">
+                        <CheckCircle size={13} /> Aprobado, sin programar
+                      </div>
+                    )}
+                    {c.estado === 'rechazada' && (
+                      <div className="flex items-center gap-1.5 text-red-600 text-xs">
+                        <XCircle size={13} /> Rechazado
+                      </div>
+                    )}
+                    {c.estado === 'programada' && r.planObj && (
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-purple-600">
+                          {new Date(r.planObj.fecha + 'T12:00:00').toLocaleDateString('es-HN', { day:'numeric', month:'short', year:'numeric' })}
+                        </p>
+                        <p className="text-xs text-slate-500">{r.planObj.horaInicio} – {r.planObj.horaFinEstimada}</p>
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-400">
+                      {new Date(c.createdAt).toLocaleDateString('es-HN')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Plan info si está programado */}
+                {c.estado === 'programada' && r.planObj && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-4 text-xs text-slate-600">
+                    <span className="flex items-center gap-1"><CalendarDays size={12} /> Programado</span>
+                    <span>Quirófano: {r.planObj ? (getQuirofanoById(r.planObj.quirofano)?.numero || '—') : ''}</span>
+                  </div>
+                )}
+
+                {/* Acciones */}
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+                  <Link href={`/mis-casos/${c._id}`} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                    <Eye size={12} /> Ver
+                  </Link>
+                  {esPendiente && (
+                    <>
+                      <button
+                        onClick={() => { setModalCaso(r); setMostrarModal(true); }}
+                        className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                      >
+                        <Pencil size={12} /> Editar
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(c)}
+                        disabled={eliminandoId === c._id}
+                        className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 text-red-600 hover:bg-red-50 hover:border-red-300"
+                      >
+                        <Trash2 size={12} /> {eliminandoId === c._id ? 'Eliminando…' : 'Eliminar'}
+                      </button>
+                    </>
                   )}
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
       </div>
+
+      {mostrarModal && (
+        <ProponerCasoModal
+          caso={modalCaso}
+          onClose={() => { setMostrarModal(false); setModalCaso(null); }}
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Eliminar Caso"
+          message="¿Estás seguro de eliminar este caso? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          danger
+          onConfirm={async () => {
+            const idToDelete = confirmDelete._id;
+            setConfirmDelete(null);
+            setEliminandoId(idToDelete);
+            try {
+              await eliminarCaso(idToDelete);
+              showToast('Caso eliminado exitosamente.', 'success');
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
+            setEliminandoId(null);
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
     </div>
   );
 }

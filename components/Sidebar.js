@@ -26,12 +26,25 @@ const NAV_BY_ROLE = {
   admision: [
     { href: '/admision', label: 'Admisión', icon: ClipboardList },
   ],
+  directivo: [
+    { href: '/proyeccion',  label: 'Proyección Quirúrgica', icon: Users },
+    { href: '/casos',       label: 'Casos Quirúrgicos',   icon: Stethoscope },
+    { href: '/planes',      label: 'Plan Quirúrgico',     icon: CalendarDays },
+    { href: '/estadisticas', label: 'Estadísticas',       icon: BarChart3 },
+    { href: '/configuracion', label: 'Configuración',    icon: Settings },
+  ],
+  coordinador: [
+    { href: '/casos',   label: 'Casos Quirúrgicos', icon: Stethoscope },
+    { href: '/planes',  label: 'Plan Quirúrgico',   icon: CalendarDays },
+  ],
 };
 
 const ROL_ICON = {
   administrador: ShieldCheck,
   especialista:  User,
   admision:      UserCog,
+  directivo:     ShieldCheck,
+  coordinador:   UserCog,
 };
 
 export default function Sidebar() {
@@ -129,7 +142,7 @@ export default function Sidebar() {
           );
         })}
 
-        {/* Logout — inside scrollable nav so always reachable on mobile */}
+        {/* Logout — after menu items */}
         <div className="mt-3 pt-3 border-t border-slate-700/50">
           <button
             onClick={() => { setMobileOpen(false); logout(); }}
