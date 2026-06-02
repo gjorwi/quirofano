@@ -36,6 +36,7 @@ function AuthProvider({ children, onUser }) {
   }, [user, loading, pathname]);
 
   const login = useCallback(async (username, password) => {
+    clearToken();
     try {
       const { token, user: u } = await api.login({ username, password });
       setToken(token);

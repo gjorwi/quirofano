@@ -6,6 +6,7 @@ import {
   Users, Stethoscope, Building2, FlaskConical,
   FileSearch, Package, UserCog, ClipboardList,
   CalendarDays, ShieldAlert, Trash2, AlertTriangle, CheckCircle2, X,
+  ScrollText,
 } from 'lucide-react';
 
 const RESETS = [
@@ -70,6 +71,15 @@ const RESETS = [
     icon: Package,
     color: 'bg-teal-500',
     confirm: 'ELIMINAR INSUMOS',
+    danger: 'medium',
+  },
+  {
+    key: 'baremos',
+    label: 'Baremos',
+    desc: 'Elimina el catálogo completo de baremos de incapacidades.',
+    icon: ScrollText,
+    color: 'bg-cyan-500',
+    confirm: 'ELIMINAR BAREMOS',
     danger: 'medium',
   },
   {

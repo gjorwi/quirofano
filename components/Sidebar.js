@@ -16,6 +16,7 @@ const NAV_BY_ROLE = {
     { href: '/casos',         label: 'Casos Quirúrgicos',   icon: Stethoscope },
     { href: '/planes',        label: 'Plan Quirúrgico',     icon: CalendarDays },
     { href: '/admision',      label: 'Admisión',            icon: ClipboardList },
+    { href: '/baremo',        label: 'Baremo de Días Máximos', icon: ClipboardList },
     { href: '/estadisticas',  label: 'Estadísticas',        icon: BarChart3 },
     { href: '/configuracion', label: 'Configuración',       icon: Settings },
   ],
@@ -30,12 +31,16 @@ const NAV_BY_ROLE = {
     { href: '/proyeccion',  label: 'Proyección Quirúrgica', icon: Users },
     { href: '/casos',       label: 'Casos Quirúrgicos',   icon: Stethoscope },
     { href: '/planes',      label: 'Plan Quirúrgico',     icon: CalendarDays },
+    { href: '/baremo',      label: 'Baremo de Días Máximos', icon: ClipboardList },
     { href: '/estadisticas', label: 'Estadísticas',       icon: BarChart3 },
     { href: '/configuracion', label: 'Configuración',    icon: Settings },
   ],
   coordinador: [
     { href: '/casos',   label: 'Casos Quirúrgicos', icon: Stethoscope },
     { href: '/planes',  label: 'Plan Quirúrgico',   icon: CalendarDays },
+  ],
+  baremo: [
+    { href: '/baremo', label: 'Baremo de Días Máximos', icon: ClipboardList },
   ],
 };
 
@@ -45,6 +50,7 @@ const ROL_ICON = {
   admision:      UserCog,
   directivo:     ShieldCheck,
   coordinador:   UserCog,
+  baremo:        UserCog,
 };
 
 export default function Sidebar() {

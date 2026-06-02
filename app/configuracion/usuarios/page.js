@@ -75,6 +75,7 @@ export default function UsuariosPage() {
                   <option value="admision">Personal de Admisión</option>
                   <option value="directivo">Directivo</option>
                   <option value="coordinador">Coordinador</option>
+                  <option value="baremo">Baremo</option>
                 </select>
               </div>
               {formData.rol === 'especialista' && (
