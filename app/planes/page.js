@@ -123,7 +123,7 @@ export default function PlanesPage() {
   return (
     <div className="page-enter">
       <Header
-        title="Plan Quirúrgico"
+        title={esJefe && miEspecialista ? `Plan Quirúrgico — ${miEspecialista.especialidad}` : 'Plan Quirúrgico'}
         subtitle={vistaMode === 'dia' ? formatFechaLarga(fechaActual) : `Semana del ${formatFecha(semanaInicio)}`}
         actions={
           <div className="flex items-center gap-2 print:hidden">

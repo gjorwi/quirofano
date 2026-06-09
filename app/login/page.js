@@ -8,9 +8,6 @@ import { ROLES, ROL_LABELS, DEFAULT_ROUTE } from '@/lib/auth';
 
 const DEMO_USERS = [
   { username: 'admin',       password: 'admin123', rol: 'administrador' },
-  // { username: 'dr.montoya',  password: 'pass123',  rol: 'especialista'  },
-  { username: 'dr.solis',    password: 'pass123',  rol: 'especialista'  },
-  { username: 'admision1',   password: 'pass123',  rol: 'admision'      },
 ];
 
 export default function LoginPage() {

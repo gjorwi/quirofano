@@ -75,7 +75,6 @@ export default function UsuariosPage() {
                   <option value="admision">Personal de Admisión</option>
                   <option value="directivo">Directivo</option>
                   <option value="coordinador">Coordinador</option>
-                  <option value="baremo">Baremo</option>
                 </select>
               </div>
               {formData.rol === 'especialista' && (
@@ -89,6 +88,20 @@ export default function UsuariosPage() {
                   />
                   <label htmlFor="esJefeServicio" className="text-sm font-medium text-blue-800 cursor-pointer select-none">
                     Jefe de Servicio — puede ver el Plan Quirúrgico de todos los especialistas
+                  </label>
+                </div>
+              )}
+              {formData.rol === 'especialista' && (
+                <div className="md:col-span-2 flex items-center gap-3 p-3 rounded-lg bg-orange-50 border border-orange-100">
+                  <input
+                    type="checkbox"
+                    id="medicinaFamiliar"
+                    checked={!!formData.medicinaFamiliar}
+                    onChange={e => set('medicinaFamiliar', e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-orange-600 cursor-pointer"
+                  />
+                  <label htmlFor="medicinaFamiliar" className="text-sm font-medium text-orange-800 cursor-pointer select-none">
+                    Medicina Familiar — días máximos de reposo limitados a 14 (21 para el resto de especialistas)
                   </label>
                 </div>
               )}

@@ -63,6 +63,60 @@ function BaremoDetailModal({ baremo, onClose }) {
             </div>
           </div>
 
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <p className="text-xs text-slate-500 mb-2 font-medium flex items-center gap-1"><CalendarDays size={12} /> Descansos recomendados (máx. 21 días c/u)</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg p-3 border border-slate-100">
+                <p className="text-xs text-slate-500 mb-2">General — {baremo.diasReposoGeneral} días</p>
+                {baremo.diasReposoGeneral > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {(() => {
+                      const reposos = [];
+                      let remaining = baremo.diasReposoGeneral;
+                      while (remaining > 0) {
+                        const days = Math.min(remaining, 21);
+                        reposos.push(days);
+                        remaining -= days;
+                      }
+                      return reposos.map((d, i) => (
+                        <span key={i} className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">
+                          {d}d
+                        </span>
+                      ));
+                    })()}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">Sin reposo</p>
+                )}
+                <p className="text-xs text-slate-400 mt-1">{Math.ceil(baremo.diasReposoGeneral / 21)} descanso(s)</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-slate-100">
+                <p className="text-xs text-slate-500 mb-2">Específico — {baremo.diasReposoEspecifica} días</p>
+                {baremo.diasReposoEspecifica > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {(() => {
+                      const reposos = [];
+                      let remaining = baremo.diasReposoEspecifica;
+                      while (remaining > 0) {
+                        const days = Math.min(remaining, 21);
+                        reposos.push(days);
+                        remaining -= days;
+                      }
+                      return reposos.map((d, i) => (
+                        <span key={i} className="inline-block bg-amber-100 text-amber-700 text-xs font-bold px-2 py-1 rounded">
+                          {d}d
+                        </span>
+                      ));
+                    })()}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">Sin reposo</p>
+                )}
+                <p className="text-xs text-slate-400 mt-1">{Math.ceil(baremo.diasReposoEspecifica / 21)} descanso(s)</p>
+              </div>
+            </div>
+          </div>
+
           {baremo.observaciones && (
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
               <p className="text-xs text-slate-500 mb-1 font-medium">Observaciones</p>
@@ -230,7 +284,7 @@ export default function BaremoPage() {
   const [detailBaremo, setDetailBaremo] = useState(null);
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
-  const isBaremoRole = user?.rol === 'baremo';
+  const isBaremoRole = ['especialista', 'administrador', 'directivo'].includes(user?.rol);
 
   const fetchBaremos = useCallback(async (pageNum = 1, append = false) => {
     if (append) setLoadingMore(true);
@@ -336,7 +390,7 @@ export default function BaremoPage() {
           <div className="space-y-2 pb-6">
             {baremos.map(b => (
               <div
-                key={b._id}
+                key={b._id ? `${b._id}_${baremos.indexOf(b)}` : `baremo_${baremos.indexOf(b)}`}
                 onClick={() => setDetailBaremo(b)}
                 className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 cursor-pointer transition-all"
               >

@@ -6,14 +6,14 @@ import { useAuth } from '@/components/AppProvider';
 import { useData } from '@/components/AppProvider';
 import { showToast } from '@/components/ToastMessage';
 import UserSelectorModal from '@/components/UserSelectorModal';
-import { Users, Stethoscope, Building2, UserCog, ShieldAlert, Monitor, Key, X } from 'lucide-react';
+import { Users, Stethoscope, Building2, UserCog, ShieldAlert, Key, X } from 'lucide-react';
 import { api } from '@/lib/apiClient';
 
 const catalogs = [
-  { href: '/configuracion/usuarios',      label: 'Usuarios',        desc: 'Gestión de usuarios del sistema',       icon: UserCog,      color: 'bg-indigo-500',  count: 9 },
-  { href: '/configuracion/pacientes',     label: 'Pacientes',       desc: 'Gestión de pacientes registrados',      icon: Users,        color: 'bg-blue-500',    count: 8 },
+  { href: '/configuracion/usuarios',      label: 'Usuarios',        desc: 'Gestion de usuarios del sistema',       icon: UserCog,      color: 'bg-indigo-500',  count: 9 },
+  { href: '/configuracion/pacientes',     label: 'Pacientes',       desc: 'Gestion de pacientes registrados',      icon: Users,        color: 'bg-blue-500',    count: 8 },
   { href: '/configuracion/especialistas', label: 'Especialistas',   desc: 'Cirujanos y personal especializado',    icon: Stethoscope,  color: 'bg-purple-500',  count: 6 },
-  { href: '/configuracion/quirofanos',    label: 'Quirófanos',      desc: 'Salas quirúrgicas y equipamiento',      icon: Building2,    color: 'bg-emerald-500', count: 4 },
+  { href: '/configuracion/quirofanos',    label: 'Quirofanos',      desc: 'Salas quirurgicas y equipamiento',      icon: Building2,    color: 'bg-emerald-500', count: 4 },
 ];
 
 export default function ConfiguracionPage() {
@@ -39,6 +39,28 @@ export default function ConfiguracionPage() {
     finally { setSavingSettings(false); }
   };
 
+  const handleChangeOwnPassword = async (e) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmarPassword) {
+      showToast('Las contrasenas no coinciden', 'error');
+      return;
+    }
+    if (passwordData.newPassword.length < 4) {
+      showToast('La contrasena debe tener al menos 4 caracteres', 'error');
+      return;
+    }
+    setChangingPw(true);
+    try {
+      await cambiarPassword(user._id, { newPassword: passwordData.newPassword });
+      showToast('Contrasena actualizada exitosamente', 'success');
+      setPasswordData({ newPassword: '', confirmarPassword: '' });
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setChangingPw(false);
+    }
+  };
+
   const handleSelectUserForPassword = (u) => {
     setSelectedUser(u);
     setPasswordData({ newPassword: '', confirmarPassword: '' });
@@ -49,17 +71,17 @@ export default function ConfiguracionPage() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmarPassword) {
-      showToast('Las contraseñas no coinciden', 'error');
+      showToast('Las contrasenas no coinciden', 'error');
       return;
     }
     if (passwordData.newPassword.length < 4) {
-      showToast('La contraseña debe tener al menos 4 caracteres', 'error');
+      showToast('La contrasena debe tener al menos 4 caracteres', 'error');
       return;
     }
     setChangingPw(true);
     try {
       await cambiarPassword(selectedUser._id, { newPassword: passwordData.newPassword });
-      showToast('Contraseña actualizada exitosamente', 'success');
+      showToast('Contrasena actualizada exitosamente', 'success');
       setShowPasswordForm(false);
       setSelectedUser(null);
     } catch (err) {
@@ -74,59 +96,35 @@ export default function ConfiguracionPage() {
     setSelectedUser(null);
   };
 
+  const isAdminOrDirectivo = ['administrador', 'directivo'].includes(user?.rol);
+
   return (
     <div className="page-enter">
-      <Header title="Configuración" subtitle="Administración de catálogos del sistema" />
+      <Header title="Configuracion" subtitle="Administracion de catalogos del sistema" />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-        <section>
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Catálogos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {catalogs.map(({ href, label, desc, icon: Icon, color, count }) => (
-              <Link key={href} href={href}>
-                <div className="card p-6 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer group">
-                  <div className="flex items-start gap-4">
-                    <div className={`${color} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                      <Icon size={22} className="text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base font-bold text-slate-800">{label}</h3>
-                        <span className="text-2xl font-bold text-slate-200 group-hover:text-slate-300 transition-colors">{count}</span>
-                      </div>
-                      <p className="text-sm text-slate-500 mt-0.5">{desc}</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {settings !== null && (
+        {isAdminOrDirectivo && (
           <section>
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Sistema</h2>
-            <div className="card p-5 space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <Monitor size={18} className="text-slate-600" />
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Catalogos</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {catalogs.map(({ href, label, desc, icon: Icon, color, count }) => (
+                <Link key={href} href={href}>
+                  <div className="card p-6 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer group">
+                    <div className="flex items-start gap-4">
+                      <div className={`${color} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                        <Icon size={22} className="text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-base font-bold text-slate-800">{label}</h3>
+                          <span className="text-2xl font-bold text-slate-200 group-hover:text-slate-300 transition-colors">{count}</span>
+                        </div>
+                        <p className="text-sm text-slate-500 mt-0.5">{desc}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">Ocultar accesos de demostración</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Elimina los accesos de prueba de la pantalla de inicio de sesión</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => toggleSetting('hideDemoLogin')}
-                  disabled={savingSettings}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none flex-shrink-0
-                    ${settings.hideDemoLogin ? 'bg-blue-600' : 'bg-slate-200'}`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
-                    ${settings.hideDemoLogin ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
+                </Link>
+              ))}
             </div>
           </section>
         )}
@@ -142,8 +140,8 @@ export default function ConfiguracionPage() {
                       <Key size={18} className="text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">Cambiar Contraseña</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Restablecer contraseña de cualquier usuario</p>
+                      <p className="text-sm font-semibold text-slate-800">Cambiar Contrasena</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Restablecer contrasena de cualquier usuario</p>
                     </div>
                   </div>
                   <button onClick={() => setShowUserSelector(true)} className="btn-secondary text-xs">
@@ -167,7 +165,7 @@ export default function ConfiguracionPage() {
                         <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-semibold">Irreversible</span>
                       </div>
                       <p className="text-sm text-slate-500 mt-0.5">
-                        Eliminar colecciones completas del sistema. Requiere confirmación por texto.
+                        Eliminar colecciones completas del sistema. Requiere confirmacion por texto.
                       </p>
                     </div>
                   </div>
@@ -175,6 +173,52 @@ export default function ConfiguracionPage() {
               </Link>
             </section>
           </>
+        )}
+
+        {!isAdminOrDirectivo && (
+          <section>
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Seguridad</h2>
+            <div className="card p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <Key size={18} className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Cambiar Mi Contrasena</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Actualizar mi contrasena de acceso</p>
+                </div>
+              </div>
+              <form onSubmit={handleChangeOwnPassword} className="space-y-3">
+                <div>
+                  <label className="label">Nueva Contrasena</label>
+                  <input
+                    type="password"
+                    className="input-field"
+                    value={passwordData.newPassword}
+                    onChange={e => setPasswordData(d => ({ ...d, newPassword: e.target.value }))}
+                    placeholder="Minimo 4 caracteres"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="label">Confirmar Contrasena</label>
+                  <input
+                    type="password"
+                    className="input-field"
+                    value={passwordData.confirmarPassword}
+                    onChange={e => setPasswordData(d => ({ ...d, confirmarPassword: e.target.value }))}
+                    placeholder="Repetir contrasena"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button type="submit" disabled={changingPw} className="btn-primary">
+                    {changingPw ? 'Guardando...' : 'Cambiar Contrasena'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
         )}
       </div>
 
@@ -184,7 +228,7 @@ export default function ConfiguracionPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Key size={18} className="text-blue-600" />
-                <h2 className="text-lg font-bold text-slate-900">Cambiar Contraseña</h2>
+                <h2 className="text-lg font-bold text-slate-900">Cambiar Contrasena</h2>
               </div>
               <button onClick={handleClosePasswordForm} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
                 <X size={18} />
@@ -194,30 +238,30 @@ export default function ConfiguracionPage() {
             {selectedUser && (
               <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <p className="text-sm font-semibold text-blue-800">{selectedUser.nombre}</p>
-                <p className="text-xs text-blue-600">@{selectedUser.username} · {selectedUser.rol}</p>
+                <p className="text-xs text-blue-600">@{selectedUser.username} - {selectedUser.rol}</p>
               </div>
             )}
 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="label">Nueva Contraseña</label>
+                <label className="label">Nueva Contrasena</label>
                 <input
                   type="password"
                   className="input-field"
                   value={passwordData.newPassword}
                   onChange={e => setPasswordData(d => ({ ...d, newPassword: e.target.value }))}
-                  placeholder="Mínimo 4 caracteres"
+                  placeholder="Minimo 4 caracteres"
                   required
                 />
               </div>
               <div>
-                <label className="label">Confirmar Contraseña</label>
+                <label className="label">Confirmar Contrasena</label>
                 <input
                   type="password"
                   className="input-field"
                   value={passwordData.confirmarPassword}
                   onChange={e => setPasswordData(d => ({ ...d, confirmarPassword: e.target.value }))}
-                  placeholder="Repetir contraseña"
+                  placeholder="Repetir contrasena"
                   required
                 />
               </div>

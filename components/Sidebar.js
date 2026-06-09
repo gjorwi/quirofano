@@ -23,6 +23,7 @@ const NAV_BY_ROLE = {
   especialista: [
     { href: '/mis-casos',  label: 'Mis Casos',        icon: Stethoscope },
     { href: '/mi-agenda',  label: 'Mi Agenda',        icon: CalendarDays },
+    { href: '/baremo',     label: 'Baremo de Días Máximos', icon: ClipboardList },
   ],
   admision: [
     { href: '/admision', label: 'Admisión', icon: ClipboardList },
@@ -41,6 +42,7 @@ const NAV_BY_ROLE = {
   ],
   baremo: [
     { href: '/baremo', label: 'Baremo de Días Máximos', icon: ClipboardList },
+    { href: '/configuracion', label: 'Configuración', icon: Settings },
   ],
 };
 
@@ -50,7 +52,6 @@ const ROL_ICON = {
   admision:      UserCog,
   directivo:     ShieldCheck,
   coordinador:   UserCog,
-  baremo:        UserCog,
 };
 
 export default function Sidebar() {
@@ -58,10 +59,20 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const baseNav = NAV_BY_ROLE[user?.rol] || [];
-  const navItems = user?.rol === 'especialista' && user?.esJefeServicio
-    ? [...baseNav, { href: '/planes', label: 'Plan Quirúrgico', icon: CalendarDays }]
-    : baseNav;
+  const esMedFamiliar = user?.rol === 'especialista' && user?.medicinaFamiliar;
+
+  let baseNav = NAV_BY_ROLE[user?.rol] || [];
+  if (esMedFamiliar) {
+    baseNav = [
+      { href: '/baremo', label: 'Baremo de Días Máximos', icon: ClipboardList },
+    ];
+  } else if (user?.rol === 'especialista' && user?.esJefeServicio) {
+    baseNav = [...baseNav, { href: '/planes', label: 'Plan Quirúrgico', icon: CalendarDays }];
+  }
+  const navItems = [...baseNav];
+  if (!baseNav.some(item => item.href === '/configuracion')) {
+    navItems.push({ href: '/configuracion', label: 'Configuración', icon: Settings });
+  }
   const RolIcon = ROL_ICON[user?.rol] || User;
   const rolLabel = ROL_LABELS[user?.rol] || '';
   const rolBadge = ROL_COLORS[user?.rol] || 'bg-slate-100 text-slate-600';
@@ -116,11 +127,18 @@ export default function Sidebar() {
           <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center flex-shrink-0">
             <RolIcon size={15} className="text-blue-400" />
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 flex flex-col gap-1">
             <p className="text-slate-200 text-xs font-semibold truncate">{user?.nombre}</p>
-            <span className={`inline-block mt-0.5 text-xs font-medium px-1.5 py-0.5 rounded ${rolBadge}`}>
-              {rolLabel}
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${rolBadge}`}>
+                {rolLabel}
+              </span>
+              {user?.esJefeServicio && (
+                <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">
+                  Jefe
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
