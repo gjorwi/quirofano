@@ -9,16 +9,10 @@ import UserSelectorModal from '@/components/UserSelectorModal';
 import { Users, Stethoscope, Building2, UserCog, ShieldAlert, Key, X } from 'lucide-react';
 import { api } from '@/lib/apiClient';
 
-const catalogs = [
-  { href: '/configuracion/usuarios',      label: 'Usuarios',        desc: 'Gestion de usuarios del sistema',       icon: UserCog,      color: 'bg-indigo-500',  count: 9 },
-  { href: '/configuracion/pacientes',     label: 'Pacientes',       desc: 'Gestion de pacientes registrados',      icon: Users,        color: 'bg-blue-500',    count: 8 },
-  { href: '/configuracion/especialistas', label: 'Especialistas',   desc: 'Cirujanos y personal especializado',    icon: Stethoscope,  color: 'bg-purple-500',  count: 6 },
-  { href: '/configuracion/quirofanos',    label: 'Quirofanos',      desc: 'Salas quirurgicas y equipamiento',      icon: Building2,    color: 'bg-emerald-500', count: 4 },
-];
-
 export default function ConfiguracionPage() {
+
   const { user } = useAuth();
-  const { usuarios, cambiarPassword } = useData();
+  const { usuarios, pacientes, especialistas, quirofanos, cambiarPassword } = useData();
   const [settings, setSettings] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -26,6 +20,13 @@ export default function ConfiguracionPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmarPassword: '' });
   const [changingPw, setChangingPw] = useState(false);
+
+  const catalogs = [
+    { href: '/configuracion/usuarios',      label: 'Usuarios',        desc: 'Gestion de usuarios del sistema',       icon: UserCog,      color: 'bg-indigo-500',  count: usuarios?.length ?? 0 },
+    { href: '/configuracion/pacientes',     label: 'Pacientes',       desc: 'Gestion de pacientes registrados',      icon: Users,        color: 'bg-blue-500',    count: pacientes?.length ?? 0 },
+    { href: '/configuracion/especialistas', label: 'Especialistas',   desc: 'Cirujanos y personal especializado',    icon: Stethoscope,  color: 'bg-purple-500',  count: especialistas?.length ?? 0 },
+    { href: '/configuracion/quirofanos',    label: 'Quirofanos',      desc: 'Salas quirurgicas y equipamiento',      icon: Building2,    color: 'bg-emerald-500', count: quirofanos?.length ?? 0 },
+  ];
 
   useEffect(() => {
     api.getSettings().then(s => setSettings(s || {})).catch(() => {});
