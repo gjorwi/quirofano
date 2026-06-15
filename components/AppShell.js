@@ -3,9 +3,16 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AppProvider';
 import Sidebar from '@/components/Sidebar';
+import UserPill from '@/components/UserPill';
 import { Cross, ShieldOff, ArrowRight } from 'lucide-react';
 import { canAccess, DEFAULT_ROUTE, ROL_LABELS } from '@/lib/auth';
 import Link from 'next/link';
+
+const RUTAS_SIN_SIDEBAR = ['/inicio', '/cedula-hospitalaria'];
+
+function pathMatches(pathname, prefix) {
+  return pathname === prefix || pathname.startsWith(prefix + '/');
+}
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
@@ -13,6 +20,7 @@ export default function AppShell({ children }) {
   const { user, loading } = useAuth();
 
   const isPublic = pathname === '/login';
+  const sinSidebar = RUTAS_SIN_SIDEBAR.some(p => pathMatches(pathname, p));
 
   // Redirect root "/" to role default after login
   useEffect(() => {
@@ -67,6 +75,32 @@ export default function AppShell({ children }) {
     );
   }
 
+  // ── Layout SIN sidebar (módulos independientes: Inicio, Cédula Hospitalaria) ──
+  if (sinSidebar) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex flex-col">
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-2.5 print:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+                <Cross size={16} className="text-white" strokeWidth={2.5} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-900 truncate">SICAQ</p>
+                <p className="text-[10px] text-slate-500 truncate">Sistema de Control y Administración Quirúrgica</p>
+              </div>
+            </div>
+            <UserPill />
+          </div>
+        </div>
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
+  // ── Layout CON sidebar (Gestión de Quirófano) ──
   return (
     <div className="h-screen overflow-hidden bg-slate-100 lg:flex">
       <Sidebar />

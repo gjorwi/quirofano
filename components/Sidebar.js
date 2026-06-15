@@ -4,45 +4,58 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Stethoscope, CalendarDays, ClipboardList,
-  Settings, ChevronRight, Cross, LogOut, User, ShieldCheck, UserCog, Menu, X, Users, BarChart3
+  Settings, ChevronRight, Cross, LogOut, User, ShieldCheck, UserCog, Menu, X, Users, BarChart3, Clock, Home, Building2
 } from 'lucide-react';
 import { useAuth } from '@/components/AppProvider';
 import { ROL_LABELS, ROL_COLORS } from '@/lib/auth';
 
 const NAV_BY_ROLE = {
   administrador: [
-    { href: '/dashboard',     label: 'Dashboard',           icon: LayoutDashboard },
-    { href: '/proyeccion',    label: 'Proyección Quirúrgica', icon: Users },
-    { href: '/casos',         label: 'Casos Quirúrgicos',   icon: Stethoscope },
-    { href: '/planes',        label: 'Plan Quirúrgico',     icon: CalendarDays },
-    { href: '/admision',      label: 'Admisión',            icon: ClipboardList },
-    { href: '/baremo',        label: 'Baremo de Días Máximos', icon: ClipboardList },
-    { href: '/estadisticas',  label: 'Estadísticas',        icon: BarChart3 },
-    { href: '/configuracion', label: 'Configuración',       icon: Settings },
+    { href: '/inicio',              label: 'Inicio',                 icon: Home },
+    { href: '/dashboard',           label: 'Dashboard',              icon: LayoutDashboard },
+    { href: '/proyeccion',          label: 'Proyección Quirúrgica',  icon: Users },
+    { href: '/casos',               label: 'Casos Quirúrgicos',      icon: Stethoscope },
+    { href: '/planes',              label: 'Plan Quirúrgico',        icon: CalendarDays },
+    { href: '/horarios',            label: 'Horarios',               icon: Clock },
+    { href: '/cedula-hospitalaria', label: 'Cédula Hospitalaria',    icon: Building2 },
+    { href: '/admision',            label: 'Admisión',               icon: ClipboardList },
+    { href: '/baremo',              label: 'Baremo de Días Máximos', icon: ClipboardList },
+    { href: '/estadisticas',        label: 'Estadísticas',           icon: BarChart3 },
+    { href: '/configuracion',       label: 'Configuración',          icon: Settings },
   ],
   especialista: [
     { href: '/mis-casos',  label: 'Mis Casos',        icon: Stethoscope },
     { href: '/mi-agenda',  label: 'Mi Agenda',        icon: CalendarDays },
+    { href: '/horarios',   label: 'Horarios',         icon: Clock },
     { href: '/baremo',     label: 'Baremo de Días Máximos', icon: ClipboardList },
   ],
   admision: [
     { href: '/admision', label: 'Admisión', icon: ClipboardList },
+    { href: '/horarios', label: 'Horarios', icon: Clock },
   ],
   directivo: [
-    { href: '/proyeccion',  label: 'Proyección Quirúrgica', icon: Users },
-    { href: '/casos',       label: 'Casos Quirúrgicos',   icon: Stethoscope },
-    { href: '/planes',      label: 'Plan Quirúrgico',     icon: CalendarDays },
-    { href: '/baremo',      label: 'Baremo de Días Máximos', icon: ClipboardList },
-    { href: '/estadisticas', label: 'Estadísticas',       icon: BarChart3 },
-    { href: '/configuracion', label: 'Configuración',    icon: Settings },
+    { href: '/inicio',              label: 'Inicio',                 icon: Home },
+    { href: '/proyeccion',          label: 'Proyección Quirúrgica',  icon: Users },
+    { href: '/casos',               label: 'Casos Quirúrgicos',      icon: Stethoscope },
+    { href: '/planes',              label: 'Plan Quirúrgico',        icon: CalendarDays },
+    { href: '/horarios',            label: 'Horarios',               icon: Clock },
+    { href: '/cedula-hospitalaria', label: 'Cédula Hospitalaria',    icon: Building2 },
+    { href: '/baremo',              label: 'Baremo de Días Máximos', icon: ClipboardList },
+    { href: '/estadisticas',        label: 'Estadísticas',           icon: BarChart3 },
+    { href: '/configuracion',       label: 'Configuración',          icon: Settings },
   ],
   coordinador: [
     { href: '/casos',   label: 'Casos Quirúrgicos', icon: Stethoscope },
     { href: '/planes',  label: 'Plan Quirúrgico',   icon: CalendarDays },
+    { href: '/horarios', label: 'Horarios',         icon: Clock },
   ],
   baremo: [
     { href: '/baremo', label: 'Baremo de Días Máximos', icon: ClipboardList },
+    { href: '/horarios', label: 'Horarios', icon: Clock },
     { href: '/configuracion', label: 'Configuración', icon: Settings },
+  ],
+  cedula: [
+    { href: '/cedula-hospitalaria', label: 'Cédula Hospitalaria', icon: Building2 },
   ],
 };
 
@@ -52,6 +65,7 @@ const ROL_ICON = {
   admision:      UserCog,
   directivo:     ShieldCheck,
   coordinador:   UserCog,
+  cedula:        ClipboardList,
 };
 
 export default function Sidebar() {
